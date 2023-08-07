@@ -1,0 +1,31 @@
+<resources>
+    <!--UI STRINGS !-->
+    <string name="app_name">Loo App</string>
+    <!--Login strings!-->
+    <string name="tag_line">Find a toilet for a quick business</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Password</string>
+    <string name="btn_login_account">Login</string>
+    <string name="login_text_display">Welcome back!</string>
+    <string name="login_question">Don\'t have an account yet?</string>
+    <string name="login_instruction">Enter your username and password to access your account.</string>
+    <!--Reg Strings!-->
+    <string name="reg_welcome">Welcome ,</string>
+    <string name="reg_question">Already have an account?</string>
+    <string name="reg_instruction">Please enter valid information to access your account</string>
+    <string name="reg_username">Username </string>
+    <string name="reg_email">Email</string>
+    <string name="reg_phone">Contact number</string>
+    <string name="reg_password">Password</string>
+    <string name="reg_password_match">Repeat Password</string>
+    <string name="registration_text_display">Register</string>
+    <!--Map box access token-->
+    <string name="mapbox_access_token">looMap</string>
+    <!--Bottom Bar navigation!-->
+    <string name="nav_explore">Explore</string>
+    <string name="nav_near">Near Me</string>
+    <string name="nav_transact">Transact</string>
+    <string name="nav_contribute">Contribute</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
