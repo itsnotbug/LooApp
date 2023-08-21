@@ -6,22 +6,40 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
 import android.widget.Toast
+import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.example.looapp.ViewModels.RegistrationViewModel
+import com.example.looapp.viewModel.RegistrationViewModel
 import com.example.looapp.databinding.ActivityRegistrationBinding
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.*
-import com.google.firebase.ktx.Firebase
+import com.example.looapp.R
+
 
 class Registration : AppCompatActivity() {
     private lateinit var binding: ActivityRegistrationBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityRegistrationBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        binding = DataBindingUtil.setContentView(this,R.layout.activity_registration)
+        binding.lifecycleOwner=this
 
         //Initialized view Model holder
         var viewModel = ViewModelProvider(this)[RegistrationViewModel::class.java]
+        binding.registerViewModel =viewModel
+
+        //observer
+        viewModel.registrationResult.observe(this, Observer { success->
+            if(success){
+                Toast.makeText(
+                    applicationContext, "Account created!",
+                    Toast.LENGTH_SHORT).show()
+                val logIntent = Intent(this, Login::class.java)
+                startActivity(logIntent)
+                finish()
+            }else{
+                Log.w("LOGError", "createUserWithEmail:failure")
+                Toast.makeText(applicationContext, "Authentication failed.",
+                    Toast.LENGTH_SHORT).show()
+            }
+        })
 
         //Register
         binding.btnRegister.setOnClickListener {
@@ -36,26 +54,9 @@ class Registration : AppCompatActivity() {
                     Toast.LENGTH_SHORT).show()
             }else{
                 if(firstPassword==secondPassword){
-                    viewModel.register(email,secondPassword) { isSuccess ->
-                        if (isSuccess) {
-                            Toast.makeText(
-                                applicationContext, "Account created!",
-                                Toast.LENGTH_SHORT).show()
-                            val logIntent = Intent(this, Login::class.java)
-                            startActivity(logIntent)
-                            finish()
-                        } else {
-                            Toast.makeText(
-                                applicationContext, "Password does not match",
-                                Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }else{
-                    Log.w("LOGError", "createUserWithEmail:failure")
-                    Toast.makeText(applicationContext, "Authentication failed.",
-                        Toast.LENGTH_SHORT).show()
+                    viewModel.register(email,secondPassword)
+
                 }
-                
             }
         }
     }

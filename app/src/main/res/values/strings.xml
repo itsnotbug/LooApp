@@ -20,12 +20,10 @@
     <string name="reg_password_match">Repeat Password</string>
     <string name="registration_text_display">Register</string>
     <!--Map box access token-->
-    <string name="mapbox_access_token">looMap</string>
+    <string name="mapbox_access_token">sk.eyJ1IjoiZG1tb3J0YWwiLCJhIjoiY2xsMTJhaDVxMDQzeDNxcDUxZmg4MTFveiJ9.Q7cnCTI4UotckcEmc8hxUw</string>
     <!--Bottom Bar navigation!-->
     <string name="nav_explore">Explore</string>
     <string name="nav_near">Near Me</string>
     <string name="nav_transact">Transact</string>
     <string name="nav_contribute">Contribute</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

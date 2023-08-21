@@ -6,23 +6,38 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
 import android.widget.Toast
+import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.example.looapp.ViewModels.LoginViewModel
+import com.example.looapp.R
+import com.example.looapp.viewModel.LoginViewModel
 import com.example.looapp.databinding.ActivityLoginBinding
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 
 class Login : AppCompatActivity() {
     private lateinit var binding:ActivityLoginBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_login)
+        binding.lifecycleOwner=this
 
         //initialized view Model holder
         var viewModel = ViewModelProvider(this)[LoginViewModel::class.java]
+        binding.loginViewModel =viewModel
 
+        //observer
+        viewModel.loginResult.observe(this, Observer { success->
+            if(success){
+                Toast.makeText(applicationContext, "Login Successfully.",
+                    Toast.LENGTH_SHORT).show()
+                    val mainInt = Intent(this, MainActivity::class.java)
+                    startActivity(mainInt)
+                   finish()
+            }else{
+                Toast.makeText(applicationContext,"Authentication Failed!",
+                    Toast.LENGTH_SHORT).show()
+                Log.w("LOG ERROR", "signInWithEmail:failure")
+            }
+        })
         //Login
         binding.btnLogin.setOnClickListener {
             val email = binding.editTxtEmail.text.toString()
@@ -32,19 +47,7 @@ class Login : AppCompatActivity() {
                 Toast.makeText(applicationContext,"Fields should not be empty",
                     Toast.LENGTH_SHORT).show()
             }else{
-               viewModel.login(email,password){ isSuccess->
-                   if(isSuccess){
-                       Toast.makeText(applicationContext, "Login Successfully.",
-                           Toast.LENGTH_SHORT).show()
-                       val mainInt = Intent(this, MainActivity::class.java)
-                       startActivity(mainInt)
-                       finish()
-                   }else{
-                       Log.w("LOG ERROR", "signInWithEmail:failure")
-                       Toast.makeText(applicationContext, "Authentication failed.",
-                           Toast.LENGTH_SHORT).show()
-                   }
-               }
+               viewModel.performLogin(email,password)
             }
         }
         binding.txtRegister.setOnClickListener{
