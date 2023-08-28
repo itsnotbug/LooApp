@@ -15,7 +15,6 @@
     <string name="reg_instruction">Please enter valid information to access your account</string>
     <string name="reg_username">Username </string>
     <string name="reg_email">Email</string>
-    <string name="reg_phone">Contact number</string>
     <string name="reg_password">Password</string>
     <string name="reg_password_match">Repeat Password</string>
     <string name="registration_text_display">Register</string>
@@ -26,4 +25,16 @@
     <string name="nav_near">Near Me</string>
     <string name="nav_transact">Transact</string>
     <string name="nav_contribute">Contribute</string>
+    <!--Toilet Buttons-->
+    <string name="btn_disabled_access">Disabled Access</string>
+    <string name="btn_required_fee">Requires Fee</string>
+    <string name="btn_required_key">Requires Key</string>
+    <!--Contribute fill up text box-->
+    <string name="text_location">Enter Name of the Place</string>
+    <string name="text_complete_address">Enter Complete Address</string>
+    <string name="text_description">Description (Optional)</string>
+    <!--Button to request adding location!-->
+    <string name="btn_request_add">Add Restroom</string>
+
+
 </resources>

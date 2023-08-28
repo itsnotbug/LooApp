@@ -45,9 +45,23 @@ dependencies {
     implementation ('com.mapbox.maps:android:10.15.0'){
         exclude group: 'group_name', module: 'module_name'
     }
+    implementation 'com.google.firebase:firebase-firestore-ktx:24.7.1'
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
     testImplementation 'junit:junit:4.13.2'
     implementation 'com.google.firebase:firebase-auth-ktx:22.1.0'
     implementation'com.google.firebase:firebase-auth:22.1.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    //search
+    implementation "com.mapbox.search:autofill:1.0.0-rc.6"
+    //discover
+    implementation "com.mapbox.search:discover:1.0.0-rc.6"
+    //autocomplete
+    implementation "com.mapbox.search:place-autocomplete:1.0.0-rc.6"
+    //offline search
+    implementation "com.mapbox.search:offline:1.0.0-rc.6"
+    //search engine
+    implementation "com.mapbox.search:mapbox-search-android:1.0.0-rc.6"
+    //Search UI
+    implementation "com.mapbox.search:mapbox-search-android-ui:1.0.0-rc.6"
 }
