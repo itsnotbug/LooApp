@@ -13,6 +13,7 @@ import com.example.looapp.Adapters.ToiletAdapter
 import com.example.looapp.Model.Toilet
 import com.example.looapp.R
 import com.example.looapp.databinding.FragmentNearMeBinding
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -35,25 +36,32 @@ class NearMeFragment : Fragment() {
         //declare firebasedb
 //        val db = Firebase.firestore
         //5)  Get all Data from Firebase
-        getAllData("toilets")
-        //5) Combine with Adapter
-        adapter = ToiletAdapter(toiletLocation)
+         adapter = ToiletAdapter(mutableListOf())
+        recycleView.adapter =adapter
+        getAllData("toilets"){coordinates->
+            //5) Combine with Adapter
+            adapter.updateData(coordinates)
+        }
         return binding.root
     }
-    private fun getAllData(collectionName: String) {
-        val db = Firebase.firestore
-        db.collection(collectionName)
-            .get()
-            .addOnSuccessListener { result->
-                for(document in result){
-                    var newToiletLocation = Toilet(document.data["longitude"].toString().toDouble(),document.data["latitude"].toString().toDouble())
-                    toiletLocation.add(newToiletLocation)
-
+    private fun getAllData(collectionName: String, callback: (MutableList<Toilet>) -> Unit) {
+        val db = FirebaseFirestore.getInstance()
+        val collectionRef = db.collection(collectionName)
+        collectionRef.get()
+            .addOnSuccessListener { result ->
+                val locationList = mutableListOf<Toilet>()
+                for (document in result) {
+                    val toiletLocation = Toilet(
+                        document.data["markerId"].toString(),
+                        document.data["longitude"].toString().toDouble(),
+                        document.data["latitude"].toString().toDouble(),)
+                    locationList.add(toiletLocation)
                 }
-                recycleView.adapter = ToiletAdapter(toiletLocation)
+                callback(locationList)
             }
-            .addOnFailureListener { _->
-                Toast.makeText(context,"FAILED TO RETRIEVE DATA",Toast.LENGTH_SHORT).show()
+            .addOnFailureListener {
+                Toast.makeText(context, "Error Occurred!", Toast.LENGTH_SHORT).show()
             }
     }
+
 }

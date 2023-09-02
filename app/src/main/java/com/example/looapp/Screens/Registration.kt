@@ -59,5 +59,11 @@ class Registration : AppCompatActivity() {
                 }
             }
         }
+        //Login
+        binding.txtLogin.setOnClickListener {
+            var myIntent = Intent(this@Registration,Login::class.java)
+            startActivity(myIntent)
+            finish()
+        }
     }
 }

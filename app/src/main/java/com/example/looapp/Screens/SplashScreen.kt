@@ -13,14 +13,21 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class SplashScreen : AppCompatActivity() {
-    private lateinit var binding:ActivitySplashScreenBinding
+    private lateinit var binding: ActivitySplashScreenBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_splash_screen)
-        binding.lifecycleOwner=this
+        binding.lifecycleOwner = this
 
         //lottie animation toilet paper
-         binding.toiletPaper.playAnimation()
-
+        binding.toiletPaper.playAnimation()
+        //Coroutine for the splashScreens
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(SplashScreenModel.SPLASH_DELAY)
+            var logIntent = Intent(this@SplashScreen, Login::class.java)
+            startActivity(logIntent)
+            finish()
+        }
     }
+
 }

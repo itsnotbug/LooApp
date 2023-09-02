@@ -35,6 +35,10 @@
     <string name="text_description">Description (Optional)</string>
     <!--Button to request adding location!-->
     <string name="btn_request_add">Add Restroom</string>
+    <!--added from sampleBern !-->
+    <string name="content_description_close">Description</string>
+    <string name="view_annotation_mode_map_fixed_delay">Fixed  Delay </string>
+    <string name="view_annotation_mode_map_sync">Map Sync</string>
 
 
 </resources>
