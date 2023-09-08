@@ -1,12 +1,9 @@
 package com.example.looapp.Fragments
 
 import android.annotation.SuppressLint
-import android.content.Context
+import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.util.TypedValue
@@ -14,25 +11,30 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.asynclayoutinflater.view.AsyncLayoutInflater
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.looapp.LocationPermissionHelper
 import com.example.looapp.Model.Toilet
 import com.example.looapp.R
 import com.example.looapp.databinding.FragmentExploreBinding
+import com.example.looapp.lastKnownLocation
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.mapbox.android.core.location.LocationEngineProvider
+import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.bindgen.Expected
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.QueriedFeature
@@ -40,6 +42,7 @@ import com.mapbox.maps.RenderedQueryGeometry
 import com.mapbox.maps.RenderedQueryOptions
 import com.mapbox.maps.Style
 import com.mapbox.maps.ViewAnnotationAnchor
+import com.mapbox.maps.extension.style.expressions.generated.Expression.Companion.interpolate
 import com.mapbox.maps.extension.style.image.image
 import com.mapbox.maps.extension.style.layers.generated.symbolLayer
 import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
@@ -49,12 +52,25 @@ import com.mapbox.maps.extension.style.sources.generated.rasterDemSource
 import com.mapbox.maps.extension.style.sources.getSourceAs
 import com.mapbox.maps.extension.style.style
 import com.mapbox.maps.extension.style.terrain.generated.terrain
+import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.gestures.OnMapClickListener
 import com.mapbox.maps.plugin.gestures.OnMapLongClickListener
+import com.mapbox.maps.plugin.gestures.OnMoveListener
 import com.mapbox.maps.plugin.gestures.addOnMapClickListener
 import com.mapbox.maps.plugin.gestures.addOnMapLongClickListener
+import com.mapbox.maps.plugin.gestures.gestures
+import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListener
+import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
+import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.viewannotation.ViewAnnotationManager
 import com.mapbox.maps.viewannotation.viewAnnotationOptions
+import com.mapbox.search.autocomplete.PlaceAutocomplete
+import com.mapbox.search.autocomplete.PlaceAutocompleteAddress
+import com.mapbox.search.autocomplete.PlaceAutocompleteSuggestion
+import com.mapbox.search.ui.adapter.autocomplete.PlaceAutocompleteUiAdapter
+import com.mapbox.search.ui.view.CommonSearchViewConfiguration
+import com.mapbox.search.ui.view.SearchResultsView
+import java.lang.ref.WeakReference
 import java.util.concurrent.CopyOnWriteArrayList
 
 
@@ -70,6 +86,39 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     private var markerWidth = 0
     private var markerHeight = 0
     private val asyncInflater by lazy { context?.let { AsyncLayoutInflater(it) } }
+    private lateinit var placeAutocomplete: PlaceAutocomplete
+    private lateinit var searchResultsView: SearchResultsView
+    private lateinit var placeAutocompleteUiAdapter: PlaceAutocompleteUiAdapter
+    private lateinit var queryEditText: EditText
+
+
+
+    private val onIndicatorBearingChangedListener = OnIndicatorBearingChangedListener {
+        mapView.getMapboxMap().setCamera(CameraOptions.Builder().bearing(it).build())
+    }
+    private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener {
+        mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(it).build())
+        mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(it)
+    }
+    private val onMoveListener = object : OnMoveListener {
+        override fun onMove(detector: MoveGestureDetector): Boolean {
+           return false
+        }
+        override fun onMoveBegin(detector: MoveGestureDetector) {
+            onCameraTrackingDismissed()
+        }
+        override fun onMoveEnd(detector: MoveGestureDetector) {}
+    }
+
+    private fun onCameraTrackingDismissed() {
+        Toast.makeText(context, "onCameraTrackingDismissed", Toast.LENGTH_SHORT).show()
+        mapView.location
+            .removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
+        mapView.location
+            .removeOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
+        mapView.gestures.removeOnMoveListener(onMoveListener)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -78,32 +127,198 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
         firestore = FirebaseFirestore.getInstance()
         mapView = binding.mapView
 
-        viewAnnotationManager = binding.mapView.viewAnnotationManager
+        //autocomplete
+        placeAutocomplete = PlaceAutocomplete.create(getString(R.string.mapbox_access_token))
+        queryEditText = binding.queryText
 
-        val bitmap = BitmapFactory.decodeResource(resources, R.drawable.red_marker)
+        //View Annotation Manager
+        viewAnnotationManager = binding.mapView.viewAnnotationManager
+            locationPermissionHelper = LocationPermissionHelper(WeakReference(context as Activity?))
+            locationPermissionHelper.checkPermissions {
+                onMapReady()
+            }
+
+
+       //search
+        searchResultsView = binding.searchResultsView
+        searchResultsView.initialize(
+            SearchResultsView.Configuration(
+                commonConfiguration = CommonSearchViewConfiguration()
+            )
+        )
+
+        //use of autocomplete
+        placeAutocompleteUiAdapter = PlaceAutocompleteUiAdapter(
+            view = searchResultsView,
+            placeAutocomplete = placeAutocomplete
+        )
+        context?.let {
+            LocationEngineProvider.getBestLocationEngine(it).lastKnownLocation(it) { point ->
+                point?.let {
+                    mapView.getMapboxMap().setCamera(
+                        CameraOptions.Builder()
+                            .center(point)
+                            .zoom(9.0)
+                            .build()
+                    )
+                }
+            }
+        }
+
+        placeAutocompleteUiAdapter.addSearchListener(object : PlaceAutocompleteUiAdapter.SearchListener {
+            override fun onSuggestionsShown(suggestions: List<PlaceAutocompleteSuggestion>) {
+                // Nothing to do
+            }
+            override fun onSuggestionSelected(suggestion: PlaceAutocompleteSuggestion) {
+//                openPlaceCard(suggestion)
+            }
+            override fun onPopulateQueryClick(suggestion: PlaceAutocompleteSuggestion) {
+                queryEditText.setText(suggestion.name)
+            }
+            override fun onError(e: Exception) {
+                // Nothing to do
+            }
+        })
+
+
+        // Inflate the layout for this fragment
+        return binding.root
+    }
+
+    private fun onMapReady() {
+        mapView.getMapboxMap().setCamera(
+            CameraOptions.Builder()
+                .zoom(14.0)
+                .build())
+        initLocationComponent()
+        setupGesturesListener()
+        val bitmap = BitmapFactory.decodeResource(resources, R.drawable.logo)
         markerWidth = bitmap.width
         markerHeight = bitmap.height
-
         map = binding.mapView.getMapboxMap().apply {
             loadStyle(
                 styleExtension = prepareStyle(Style.MAPBOX_STREETS, bitmap)
             ) {
+                mapView.location.updateSettings {
+                    enabled = true
+                    pulsingEnabled = true
+                }
                 addOnMapClickListener(this@ExploreFragment)
                 addOnMapLongClickListener(this@ExploreFragment)
                 Toast.makeText(context, STARTUP_TEXT, Toast.LENGTH_LONG).show()
                 displayMarkers()
             }
-
         }
-
-
-
-    // Inflate the layout for this fragment
-        return binding.root
     }
 
+    private fun setupGesturesListener() {
+        mapView.gestures.addOnMoveListener(onMoveListener)
+    }
+
+    private fun initLocationComponent() {
+        val locationComponentPlugin = mapView.location
+        locationComponentPlugin.updateSettings {
+        this.enabled = true
+        this.locationPuck = LocationPuck2D(
+            bearingImage = context?.let {
+                AppCompatResources.getDrawable(
+                    it,
+                    R.drawable.mapbox_user_puck_icon,
+                )
+            },
+            shadowImage = context?.let {
+                AppCompatResources.getDrawable(
+                    it,
+                    R.drawable.mapbox_user_icon_shadow,
+                )
+            },
+            scaleExpression = interpolate {
+                linear()
+                zoom()
+                stop {
+                    literal(0.0)
+                    literal(0.6)
+                }
+                stop {
+                    literal(20.0)
+                    literal(1.0)
+                }
+            }.toJson()
+        )
+    }
+    locationComponentPlugin.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
+    locationComponentPlugin.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
+}
+
+    @SuppressLint("SuspiciousIndentation")
+    private fun getPlaceByCoordinates(id:String, point: Point){
+        //lifecycle  response for autocomplete
+        lifecycleScope.launchWhenCreated {
+            val response = placeAutocomplete.suggestions(point)
+            if (response.isValue) {
+                val suggestions = requireNotNull(response.value)
+                if (suggestions.isNotEmpty()) {
+                    val selectedSuggestion = suggestions.first()
+                    val selectionResponse = placeAutocomplete.select(selectedSuggestion)
+                    selectionResponse.onValue { result ->
+                        val resultAddress = result.address
+                        Toast.makeText(context,"${result.address}",Toast.LENGTH_LONG).show()
+                        Log.i("address","${result.address}")
+                        val dataMap = parseResultName(resultAddress)
+                             if (dataMap.isNotEmpty()) {
+                                 // Access fields from dataMap
+                                 val houseNumber = dataMap["houseNumber"]
+                                 val street = dataMap["street"]
+                                 val neighborhood = dataMap["neighborhood"]
+                                 val locality = dataMap["locality"]
+                                 val postcode = dataMap["postcode"]
+                                 val place = dataMap["place"]
+                                 val district = dataMap["district"]
+                                 val region = dataMap["region"]
+                                 val country = dataMap["country"]
+                                 val formattedAddress = dataMap["formattedAddress"]
+                                 val countryIso1 = dataMap["countryIso1"]
+                                 val countryIso2 = dataMap["countryIso2"]
+                                 //add in firebase using toilet data class
+                                 val newToiletLocation = Toilet(id,result.coordinate.longitude(),
+                                     result.coordinate.latitude(),houseNumber, street, neighborhood,
+                                     locality, postcode, place, district, region, country,
+                                     formattedAddress, countryIso1, countryIso2)
+                                 addData(newToiletLocation)
+                             } else {
+                                 // Handle the case when the list is empty
+                                 Toast.makeText(context,"Empty mapping of data",Toast.LENGTH_SHORT).show()
+                             }
+
+                    }.onError { e ->
+                        Log.i("callApi", "An error occurred during selection", e)
+                    }
+                }
+            } else {
+                Log.i("callApiError", "Place Autocomplete error", response.error)
+            }
+        }
+    }
+    private fun parseResultName(input: PlaceAutocompleteAddress?): Map<String, String> {
+        return input?.toString()
+            ?.removePrefix("PlaceAutocompleteAddress(")
+            ?.removeSuffix(")")
+            ?.split(", ")
+            ?.mapNotNull {
+                val keyValue = it.split("=")
+                if (keyValue.size == 2) {
+                    keyValue[0] to keyValue[1]
+                } else {
+                    null // Skip invalid key-value pairs
+                }
+            }
+            ?.toMap()
+            ?: emptyMap()
+    }
+
+
     private fun prepareStyle(styleUri: String, bitmap: Bitmap) = style(styleUri) {
-        +image(RED_ICON_ID) {
+        +image(TOILET_ICON_ID) {
             bitmap(bitmap)
         }
         +geoJsonSource(SOURCE_ID) {
@@ -116,7 +331,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
             +terrain(TERRAIN_SOURCE)
         }
         +symbolLayer(LAYER_ID, SOURCE_ID) {
-            iconImage(RED_ICON_ID)
+            iconImage(TOILET_ICON_ID )
             iconAnchor(IconAnchor.BOTTOM)
             iconAllowOverlap(false)
         }
@@ -130,7 +345,6 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                 Log.e("SUCCESS_TAG", "Failed! $e")
             }
     }
-
     private fun getAllData(collectionName: String, callback: (MutableList<Toilet>) -> Unit) {
         val db = FirebaseFirestore.getInstance()
         val collectionRef = db.collection(collectionName)
@@ -141,7 +355,20 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                     val toiletLocation = Toilet(
                         document.data["markerId"].toString(),
                         document.data["longitude"].toString().toDouble(),
-                        document.data["latitude"].toString().toDouble(),)
+                        document.data["latitude"].toString().toDouble(),
+                        document.data["houseNumber"].toString(),
+                        document.data["street"].toString(),
+                        document.data["neighborhood"].toString(),
+                        document.data["locality"].toString(),
+                        document.data["postcode"].toString(),
+                        document.data["place"].toString(),
+                        document.data["district"].toString(),
+                        document.data["region"].toString(),
+                        document.data["country"].toString(),
+                        document.data["formattedAddress"].toString(),
+                        document.data["countryIso1"].toString(),
+                        document.data["countryIso2"].toString())
+
                     locationList.add(toiletLocation)
                 }
                 callback(locationList)
@@ -151,16 +378,12 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
             }
     }
 
-
-
-    private fun showAddLocationDialog(markerId: String, latitude: Double, longitude: Double) {
+    private fun showAddLocationDialog() {
         val alertDialogBuilder = context?.let { AlertDialog.Builder(it) }
         alertDialogBuilder?.setTitle("Add Toilet Location")
         alertDialogBuilder?.setMessage("Would you like to add this location?")
         alertDialogBuilder?.setPositiveButton("Continue") { dialog, _ ->
-            //dito add data sa firebase
-            var toilets = Toilet(markerId,longitude, latitude)
-            addData(toilets)
+            //Get Place By coordinate using API
             dialog.dismiss()
 
         }
@@ -173,50 +396,38 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
 
 
     }
-
-    private fun bitmapFromDrawableRes(context: Context, @DrawableRes resourceId: Int) =
-        convertDrawableToBitmap(AppCompatResources.getDrawable(context, resourceId))
-
-    private fun convertDrawableToBitmap(sourceDrawable: Drawable?): Bitmap? {
-        if (sourceDrawable == null) {
-            return null
-        }
-        return if (sourceDrawable is BitmapDrawable) {
-            sourceDrawable.bitmap
-        } else {
-
-            // copying drawable object to not manipulate on the same reference
-            val constantState = sourceDrawable.constantState ?: return null
-            val drawable = constantState.newDrawable().mutate()
-            val bitmap: Bitmap = Bitmap.createBitmap(
-                drawable.intrinsicWidth, drawable.intrinsicHeight,
-                Bitmap.Config.ARGB_8888
-            )
-            val canvas = Canvas(bitmap)
-            drawable.setBounds(0, 0, canvas.width, canvas.height)
-            drawable.draw(canvas)
-            bitmap
-        }
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        locationPermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
-
     override fun onStart() {
         super.onStart()
-        mapView?.onStart()
+        mapView.onStart()
     }
 
     override fun onStop() {
         super.onStop()
-        mapView?.onStop()
+        mapView.onStop()
     }
 
     override fun onLowMemory() {
         super.onLowMemory()
-        mapView?.onLowMemory()
+        mapView.onLowMemory()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mapView?.onDestroy()
+        super.onDestroy()
+        mapView.location
+            .removeOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
+        mapView.location
+            .removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
+        mapView.gestures.removeOnMoveListener(onMoveListener)
+        mapView.onDestroy()
     }
 
     override fun onMapLongClick(point: Point): Boolean {
@@ -255,9 +466,8 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     //add marker
     private fun addMarkerAndReturnId(point: Point): String {
         val currentId = "${MARKER_ID_PREFIX}${(markerId++)}"
-        val toilets =Toilet(currentId,point.longitude(),point.latitude())
-        //Add to firebase
-        addData(toilets)
+        //Retrieve
+        getPlaceByCoordinates(currentId,point)
         pointList.add(Feature.fromGeometry(point, null, currentId))
         val featureCollection = FeatureCollection.fromFeatures(pointList)
         map.getStyle { style ->
@@ -272,7 +482,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
         getAllData("toilets") { locationList ->
             Toast.makeText(context, "${locationList.size} locations loaded.", Toast.LENGTH_SHORT).show()
             for(location in locationList){
-                val point = Point.fromLngLat(location.longitude, location.latitude)
+                val point = Point.fromLngLat(location.longitude,location.latitude)
                 pointList.add(Feature.fromGeometry(point, null, location.markerId))
             }
             val featureCollection = FeatureCollection.fromFeatures(pointList)
@@ -337,7 +547,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
         this@ExploreFragment.resources.displayMetrics
     )
     private companion object {
-        const val RED_ICON_ID = "red"
+        const val TOILET_ICON_ID = "blue"
         const val SOURCE_ID = "source_id"
         const val LAYER_ID = "layer_id"
         const val TERRAIN_SOURCE = "TERRAIN_SOURCE"
@@ -347,3 +557,4 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
         const val STARTUP_TEXT = "Long click on a map to add a marker and click on a marker to pop-up annotation."
     }
 }
+

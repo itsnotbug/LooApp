@@ -37,21 +37,28 @@ dataBinding{
 
 dependencies {
 
+    //lottie animation
     implementation 'com.airbnb.android:lottie-compose:6.0.0'
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.firebase:firebase-firestore-ktx:24.7.1'
+
+    //google play services for maps
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
+
+    //layout inflater
     implementation 'androidx.asynclayoutinflater:asynclayoutinflater:1.0.0'
     testImplementation 'junit:junit:4.13.2'
-    implementation 'com.google.firebase:firebase-auth-ktx:22.1.0'
-    implementation'com.google.firebase:firebase-auth:22.1.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
-    //Call from okhttp
+    //firebase authentication
+    implementation 'com.google.firebase:firebase-auth-ktx:22.1.0'
+    implementation'com.google.firebase:firebase-auth:22.1.0'
+
+    //Call from okhttp version 10 mapbox sdk api
     implementation('com.mapbox.maps:android:10.15.1') {
         exclude group: 'com.mapbox.common', module: 'okhttp'
     }
@@ -69,5 +76,11 @@ dependencies {
     implementation "com.mapbox.search:mapbox-search-android-ui:1.0.0-rc.6"
     //Lifecycle
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.1"
+
+    //google play services vision for QR Code Scanner
+    implementation 'com.google.android.gms:play-services-vision:20.1.3'
+
+
+
 
 }

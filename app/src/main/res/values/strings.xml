@@ -37,8 +37,12 @@
     <string name="btn_request_add">Add Restroom</string>
     <!--added from sampleBern !-->
     <string name="content_description_close">Description</string>
-    <string name="view_annotation_mode_map_fixed_delay">Fixed  Delay </string>
-    <string name="view_annotation_mode_map_sync">Map Sync</string>
-
-
+    <!-- For transaction fragment!-->
+    <string name="rad_donate">Donate</string>
+    <string name="rad_pay">Payment</string>
+    <string name="trans_history">Transaction History</string>
+     <!--for explore fragment!-->
+    <string name="discover_search_nearby">Search</string>
+    <string name="discover_search_in_area">Search for selected area</string>
+    <string name="discover_search_error">Error happened during search request</string>
 </resources>

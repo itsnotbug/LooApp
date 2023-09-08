@@ -6,8 +6,8 @@ import com.example.looapp.databinding.RestroomItemLayoutBinding
 
 class ToiletViewHolder(var binding: RestroomItemLayoutBinding):RecyclerView.ViewHolder(binding.root) {
     fun bind(toilet: Toilet){
-        binding.txtLandMark.text = toilet.latitude.toString()
-        binding.txtLocation.text = toilet.longitude.toString()
+        binding.txtLandMark.text = toilet.formattedAddress
+        binding.txtLocation.text = toilet.street
 
     }
 }
