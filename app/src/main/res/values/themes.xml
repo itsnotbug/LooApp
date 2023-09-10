@@ -10,6 +10,9 @@
     <style name="Theme.LooApp" parent="Base.Theme.LooApp" />
     <style name="App.Custom.Indicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:color">@color/yellow</item>
-
+    </style>
+    <style name="RatingBar" parent="Widget.AppCompat.RatingBar">
+        <item name="colorControlNormal">#4D000000</item>
+        <item name="colorControlActivated">#FDD736</item>
     </style>
 </resources>

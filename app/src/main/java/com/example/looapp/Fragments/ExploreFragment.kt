@@ -92,7 +92,6 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     private lateinit var queryEditText: EditText
 
 
-
     private val onIndicatorBearingChangedListener = OnIndicatorBearingChangedListener {
         mapView.getMapboxMap().setCamera(CameraOptions.Builder().bearing(it).build())
     }
@@ -102,7 +101,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     }
     private val onMoveListener = object : OnMoveListener {
         override fun onMove(detector: MoveGestureDetector): Boolean {
-           return false
+            return false
         }
         override fun onMoveBegin(detector: MoveGestureDetector) {
             onCameraTrackingDismissed()
@@ -133,13 +132,12 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
 
         //View Annotation Manager
         viewAnnotationManager = binding.mapView.viewAnnotationManager
-            locationPermissionHelper = LocationPermissionHelper(WeakReference(context as Activity?))
-            locationPermissionHelper.checkPermissions {
-                onMapReady()
-            }
+        locationPermissionHelper = LocationPermissionHelper(WeakReference(context as Activity?))
+        locationPermissionHelper.checkPermissions {
+            onMapReady()
+        }
 
-
-       //search
+        //search
         searchResultsView = binding.searchResultsView
         searchResultsView.initialize(
             SearchResultsView.Configuration(
@@ -179,8 +177,6 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                 // Nothing to do
             }
         })
-
-
         // Inflate the layout for this fragment
         return binding.root
     }
@@ -218,37 +214,37 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     private fun initLocationComponent() {
         val locationComponentPlugin = mapView.location
         locationComponentPlugin.updateSettings {
-        this.enabled = true
-        this.locationPuck = LocationPuck2D(
-            bearingImage = context?.let {
-                AppCompatResources.getDrawable(
-                    it,
-                    R.drawable.mapbox_user_puck_icon,
-                )
-            },
-            shadowImage = context?.let {
-                AppCompatResources.getDrawable(
-                    it,
-                    R.drawable.mapbox_user_icon_shadow,
-                )
-            },
-            scaleExpression = interpolate {
-                linear()
-                zoom()
-                stop {
-                    literal(0.0)
-                    literal(0.6)
-                }
-                stop {
-                    literal(20.0)
-                    literal(1.0)
-                }
-            }.toJson()
-        )
+            this.enabled = true
+            this.locationPuck = LocationPuck2D(
+                bearingImage = context?.let {
+                    AppCompatResources.getDrawable(
+                        it,
+                        R.drawable.mapbox_user_puck_icon,
+                    )
+                },
+                shadowImage = context?.let {
+                    AppCompatResources.getDrawable(
+                        it,
+                        R.drawable.mapbox_user_icon_shadow,
+                    )
+                },
+                scaleExpression = interpolate {
+                    linear()
+                    zoom()
+                    stop {
+                        literal(0.0)
+                        literal(0.6)
+                    }
+                    stop {
+                        literal(20.0)
+                        literal(1.0)
+                    }
+                }.toJson()
+            )
+        }
+        locationComponentPlugin.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
+        locationComponentPlugin.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
     }
-    locationComponentPlugin.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
-    locationComponentPlugin.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
-}
 
     @SuppressLint("SuspiciousIndentation")
     private fun getPlaceByCoordinates(id:String, point: Point){
@@ -265,30 +261,30 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                         Toast.makeText(context,"${result.address}",Toast.LENGTH_LONG).show()
                         Log.i("address","${result.address}")
                         val dataMap = parseResultName(resultAddress)
-                             if (dataMap.isNotEmpty()) {
-                                 // Access fields from dataMap
-                                 val houseNumber = dataMap["houseNumber"]
-                                 val street = dataMap["street"]
-                                 val neighborhood = dataMap["neighborhood"]
-                                 val locality = dataMap["locality"]
-                                 val postcode = dataMap["postcode"]
-                                 val place = dataMap["place"]
-                                 val district = dataMap["district"]
-                                 val region = dataMap["region"]
-                                 val country = dataMap["country"]
-                                 val formattedAddress = dataMap["formattedAddress"]
-                                 val countryIso1 = dataMap["countryIso1"]
-                                 val countryIso2 = dataMap["countryIso2"]
-                                 //add in firebase using toilet data class
-                                 val newToiletLocation = Toilet(id,result.coordinate.longitude(),
-                                     result.coordinate.latitude(),houseNumber, street, neighborhood,
-                                     locality, postcode, place, district, region, country,
-                                     formattedAddress, countryIso1, countryIso2)
-                                 addData(newToiletLocation)
-                             } else {
-                                 // Handle the case when the list is empty
-                                 Toast.makeText(context,"Empty mapping of data",Toast.LENGTH_SHORT).show()
-                             }
+                        if (dataMap.isNotEmpty()) {
+                            // Access fields from dataMap
+                            val houseNumber = dataMap["houseNumber"]
+                            val street = dataMap["street"]
+                            val neighborhood = dataMap["neighborhood"]
+                            val locality = dataMap["locality"]
+                            val postcode = dataMap["postcode"]
+                            val place = dataMap["place"]
+                            val district = dataMap["district"]
+                            val region = dataMap["region"]
+                            val country = dataMap["country"]
+                            val formattedAddress = dataMap["formattedAddress"]
+                            val countryIso1 = dataMap["countryIso1"]
+                            val countryIso2 = dataMap["countryIso2"]
+                            //add in firebase using toilet data class
+                            val newToiletLocation = Toilet(id,result.coordinate.longitude(),
+                                result.coordinate.latitude(),houseNumber, street, neighborhood,
+                                locality, postcode, place, district, region, country,
+                                formattedAddress, countryIso1, countryIso2)
+                            addData(newToiletLocation)
+                        } else {
+                            // Handle the case when the list is empty
+                            Toast.makeText(context,"Empty mapping of data",Toast.LENGTH_SHORT).show()
+                        }
 
                     }.onError { e ->
                         Log.i("callApi", "An error occurred during selection", e)
@@ -317,7 +313,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     }
 
 
-    private fun prepareStyle(styleUri: String, bitmap: Bitmap) = style(styleUri) {
+    private fun prepareStyle( styleUri: String, bitmap: Bitmap) = style(styleUri) {
         +image(TOILET_ICON_ID) {
             bitmap(bitmap)
         }
@@ -421,7 +417,6 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        super.onDestroy()
         mapView.location
             .removeOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
         mapView.location
@@ -439,8 +434,8 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     override fun onMapClick(point: Point): Boolean {
         map.queryRenderedFeatures(
             RenderedQueryGeometry(map.pixelForCoordinate(point)), RenderedQueryOptions(listOf(LAYER_ID), null)
-        ) {
-            onFeatureClicked(it) { feature ->
+        ) { expected ->
+            onFeatureClicked(expected) { feature ->
                 if (feature.id() != null) {
                     viewAnnotationManager.getViewAnnotationByFeatureId(feature.id()!!)?.toggleViewVisibility()
                 }
@@ -448,16 +443,20 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
         }
         return true
     }
+
     private fun onFeatureClicked(
         expected: Expected<String, List<QueriedFeature>>,
         onFeatureClicked: (Feature) -> Unit
     ) {
-        if (expected.isValue && expected.value?.size!! > 0) {
-            expected.value?.get(0)?.feature?.let { feature ->
-                onFeatureClicked.invoke(feature)
+        if (expected.isValue && expected.value?.isNotEmpty() == true) {
+            expected.value?.forEach { queriedFeature ->
+                queriedFeature.feature?.let { feature ->
+                    onFeatureClicked.invoke(feature)
+                }
             }
         }
     }
+
 
     private fun View.toggleViewVisibility() {
         visibility = if (visibility == View.VISIBLE) View.GONE else View.VISIBLE
@@ -507,7 +506,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                 asyncInflater = it
             ) { viewAnnotation ->
                 viewAnnotation.visibility = View.GONE
-    // calculate offsetY manually taking into account icon height only because of bottom anchoring
+                // calculate offsetY manually taking into account icon height only because of bottom anchoring
                 viewAnnotationManager.updateViewAnnotation(
                     viewAnnotation,
                     viewAnnotationOptions {
@@ -557,4 +556,3 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
         const val STARTUP_TEXT = "Long click on a map to add a marker and click on a marker to pop-up annotation."
     }
 }
-

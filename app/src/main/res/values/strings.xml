@@ -41,7 +41,7 @@
     <string name="rad_donate">Donate</string>
     <string name="rad_pay">Payment</string>
     <string name="trans_history">Transaction History</string>
-     <!--for explore fragment!-->
+    <!--for explore fragment!-->
     <string name="discover_search_nearby">Search</string>
     <string name="discover_search_in_area">Search for selected area</string>
     <string name="discover_search_error">Error happened during search request</string>

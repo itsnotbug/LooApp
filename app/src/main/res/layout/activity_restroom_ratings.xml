@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".Screens.RestroomRatings">
+
+        <!-- Header -->
+
+        <!-- Image and Text -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/blue"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtRateExperience"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:fontFamily="@font/poppins_medium"
+                android:text="Rate your loo experience"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <ImageView
+                android:id="@+id/imgEmojiRate"
+                android:background="@drawable/glad"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+               />
+        </LinearLayout>
+
+        <!-- First Rating -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtQuestionNumOne"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:fontFamily="@font/poppins"
+                android:text="How clean was it?"
+                android:textAlignment="center"
+                android:textColor="@color/dark_blue" />
+
+            <androidx.appcompat.widget.AppCompatRatingBar
+                android:theme="@style/RatingBar"
+                android:id="@+id/ratingBarOne"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center"
+                android:layout_height="wrap_content"
+                android:numStars="5"
+                android:stepSize="1" />
+        </LinearLayout>
+
+        <!-- Second Rating -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtQuestionNumTwo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins"
+                android:text="How did  the facilities perform?"
+                android:textAlignment="center"
+                android:textColor="@color/dark_blue" />
+
+            <androidx.appcompat.widget.AppCompatRatingBar
+                android:theme="@style/RatingBar"
+                android:id="@+id/ratingBarTwo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:numStars="5"
+                android:stepSize="1" />
+        </LinearLayout>
+
+        <!-- Overall Rating -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtQuestionNumThree"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins"
+                android:text="How was the overall experience?"
+                android:textAlignment="center"
+                android:textColor="@color/dark_blue" />
+
+            <androidx.appcompat.widget.AppCompatRatingBar
+                android:theme="@style/RatingBar"
+                android:id="@+id/ratingBarOverAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:numStars="5"
+                android:stepSize="1" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:background="@drawable/custom_border_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="10dp"
+            android:orientation="vertical"
+            android:paddingStart="10dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="10dp">
+
+            <TextView
+                android:id="@+id/txQuestionNumThree"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:fontFamily="@font/poppins"
+                android:padding="5dp"
+                android:text="What did you like about it?"
+                android:textColor="@color/mapbox_gray_dark" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="10dp"
+                android:layout_marginRight="2dp"
+                android:orientation="horizontal">
+
+                <CheckedTextView
+                    android:id="@+id/checkedTextView2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/custom_border_ratings"
+                    android:padding="5dp"
+                    android:text="Hygenic"
+                    android:textAlignment="center" />
+
+                <CheckedTextView
+                    android:id="@+id/checkedTextView3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/custom_border_ratings"
+                    android:padding="5dp"
+                    android:text="Free of use"
+                    android:textAlignment="center" />
+
+                <CheckedTextView
+                    android:id="@+id/checkedTextView4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/custom_border_ratings"
+                    android:padding="5dp"
+                    android:text="Maintained"
+                    android:textAlignment="center" />
+
+                <CheckedTextView
+                    android:id="@+id/checkedTextView5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/custom_border_ratings"
+                    android:padding="5dp"
+                    android:text="Comfy"
+                    android:textAlignment="center" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/txtQuestionNumberFour"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:fontFamily="@font/poppins"
+                android:text="Which of the following is contained in this restroom?"
+                android:textColor="@color/mapbox_gray_dark" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingTop="5dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="10dp">
+
+                <CheckedTextView
+                    android:id="@+id/checkedTextView6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/custom_border_ratings"
+                    android:padding="5dp"
+                    android:text="Bidet"
+                    android:textAlignment="center" />
+
+                <CheckedTextView
+                    android:id="@+id/checkedTextView7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/custom_border_ratings"
+                    android:padding="5dp"
+                    android:text="Sink"
+                    android:textAlignment="center" />
+
+                <CheckedTextView
+                    android:id="@+id/checkedTextView8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/custom_border_ratings"
+                    android:padding="5dp"
+                    android:text="Trash Bin"
+                    android:textAlignment="center" />
+
+                <CheckedTextView
+                    android:id="@+id/checkedTextView9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/custom_border_ratings"
+                    android:padding="5dp"
+                    android:text="Toiletries"
+                    android:textAlignment="center" />
+
+                <CheckedTextView
+                    android:id="@+id/checkedTextView10"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/custom_border_ratings"
+                    android:padding="5dp"
+                    android:text="Hand Dryer"
+                    android:textAlignment="center" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/custom_border_layout"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <TextView
+
+                android:id="@+id/txtTellUsMore"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins"
+                android:text="Tell us more (optional)"
+                android:textColor="@color/mapbox_gray_dark" />
+
+            <EditText
+                android:id="@+id/txtDetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:gravity="start|top"
+                android:inputType="textMultiLine" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="10dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/button"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:backgroundTint="@color/blue"
+                android:fontFamily="@font/poppins"
+                android:minHeight="48dp"
+                android:text="Maybe, later" />
+
+            <Button
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:backgroundTint="@color/blue"
+                android:fontFamily="@font/poppins"
+                android:minHeight="48dp"
+                android:text="Submit" />
+        </LinearLayout>
+    </LinearLayout>
+</layout>

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.SearchView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -12,33 +13,68 @@ import com.example.looapp.Adapters.ToiletAdapter
 import com.example.looapp.Model.Toilet
 import com.example.looapp.databinding.FragmentNearMeBinding
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.Locale
 
 class NearMeFragment : Fragment() {
     private lateinit var binding:FragmentNearMeBinding
     private lateinit var recycleView: RecyclerView
     private lateinit var adapter: ToiletAdapter
+    private lateinit var toiletLocation: MutableList<Toilet>
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
         binding = FragmentNearMeBinding.inflate(layoutInflater,container,false)
-        //2.) Set up recycleView Binding
+        // Set up recycleView Binding
         recycleView = binding.recyclerView
-        //3.) Set up layout
+        // Set up layout
         recycleView.layoutManager = LinearLayoutManager(context)
-        //4.) Initialize firebase connection
-        //declare firebasedb
-//        val db = Firebase.firestore
-        //5)  Get all Data from Firebase
-         adapter = ToiletAdapter(mutableListOf())
+        // Get all Data from Firebase
+        adapter = ToiletAdapter(mutableListOf())
         recycleView.adapter =adapter
+
         getAllData("toilets"){coordinates->
-            //6) Combine with Adapter
+            // Combine with Adapter
             adapter.updateData(coordinates)
+            toiletLocation =coordinates
         }
+
+          binding.searchView.setOnQueryTextListener(object:SearchView.OnQueryTextListener,
+              androidx.appcompat.widget.SearchView.OnQueryTextListener {
+              override fun onQueryTextSubmit(query: String?): Boolean {
+                  return false
+              }
+
+              override fun onQueryTextChange(newText: String?): Boolean {
+                  filterList(newText)
+                  return true
+              }
+
+          })
+
         return binding.root
     }
+
+    private fun filterList(query: String?) {
+            if(query!=null){
+                val filteredList = ArrayList<Toilet>()
+                for (i in toiletLocation){
+                    if(i.formattedAddress?.lowercase(Locale.ROOT)!!.contains(query)){
+                        filteredList.add(i)
+                    }
+                }
+                if(filteredList.isEmpty()){
+                    Toast.makeText(context,"No data found",Toast.LENGTH_SHORT).show()
+                }
+                else{
+                    adapter.setFiltered(filteredList)
+                }
+            }
+        }
+
+
+
     private fun getAllData(collectionName: String, callback: (MutableList<Toilet>) -> Unit) {
         val db = FirebaseFirestore.getInstance()
         val collectionRef = db.collection(collectionName)

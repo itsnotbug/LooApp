@@ -4,13 +4,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
-import com.example.looapp.Fragments.ContributeFragment
 import com.example.looapp.Fragments.ExploreFragment
 import com.example.looapp.Fragments.NearMeFragment
 import com.example.looapp.Fragments.TransactFragment
 import com.example.looapp.R
 import com.example.looapp.databinding.ActivityMainBinding
-import com.example.looapp.viewModel.LoginViewModel
 import com.example.looapp.viewModel.MainActivityViewModel
 
 
@@ -25,7 +23,6 @@ class MainActivity : AppCompatActivity(){
         val exploreFragment =  ExploreFragment()
         val nearMeFragment  =  NearMeFragment()
         val transactFragment = TransactFragment()
-        val contributeFragment = ContributeFragment()
 
         //Fragments
         supportFragmentManager.beginTransaction().apply {
@@ -53,12 +50,6 @@ class MainActivity : AppCompatActivity(){
                         commit()
                     }
 
-                }
-                R.id.itemContribute -> {
-                    this.supportFragmentManager.beginTransaction().apply {
-                        replace(R.id.fragmentContainerView, contributeFragment)
-                        commit()
-                    }
                 }
                 R.id.itemTransact->{
                     this.supportFragmentManager.beginTransaction().apply {

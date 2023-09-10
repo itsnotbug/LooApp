@@ -12,8 +12,4 @@
         android:id="@+id/itemTransact"
         android:icon="@drawable/baseline_payment_24"
         android:title="@string/nav_transact" />
-   <item
-        android:id="@+id/itemContribute"
-        android:icon="@drawable/baseline_sports_kabaddi_24"
-        android:title="@string/nav_contribute" />
 </menu>
