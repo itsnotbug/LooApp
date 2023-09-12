@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import com.example.looapp.Model.Toilet
+import com.example.looapp.Model.Restroom
 import com.example.looapp.R
 import com.example.looapp.databinding.FragmentExploreBinding
 import com.example.looapp.databinding.FragmentTransactBinding

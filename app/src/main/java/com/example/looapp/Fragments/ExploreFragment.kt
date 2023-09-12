@@ -16,20 +16,20 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.asynclayoutinflater.view.AsyncLayoutInflater
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.looapp.LocationPermissionHelper
-import com.example.looapp.Model.Toilet
+import com.example.looapp.Model.Restroom
 import com.example.looapp.R
+import com.example.looapp.databinding.ActivityRatingsDialogBinding
 import com.example.looapp.databinding.FragmentExploreBinding
 import com.example.looapp.lastKnownLocation
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.mapbox.android.core.location.LocationEngineProvider
-import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.bindgen.Expected
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
@@ -42,7 +42,6 @@ import com.mapbox.maps.RenderedQueryGeometry
 import com.mapbox.maps.RenderedQueryOptions
 import com.mapbox.maps.Style
 import com.mapbox.maps.ViewAnnotationAnchor
-import com.mapbox.maps.extension.style.expressions.generated.Expression.Companion.interpolate
 import com.mapbox.maps.extension.style.image.image
 import com.mapbox.maps.extension.style.layers.generated.symbolLayer
 import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
@@ -52,15 +51,11 @@ import com.mapbox.maps.extension.style.sources.generated.rasterDemSource
 import com.mapbox.maps.extension.style.sources.getSourceAs
 import com.mapbox.maps.extension.style.style
 import com.mapbox.maps.extension.style.terrain.generated.terrain
-import com.mapbox.maps.plugin.LocationPuck2D
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
 import com.mapbox.maps.plugin.gestures.OnMapClickListener
 import com.mapbox.maps.plugin.gestures.OnMapLongClickListener
-import com.mapbox.maps.plugin.gestures.OnMoveListener
 import com.mapbox.maps.plugin.gestures.addOnMapClickListener
 import com.mapbox.maps.plugin.gestures.addOnMapLongClickListener
-import com.mapbox.maps.plugin.gestures.gestures
-import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListener
-import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.viewannotation.ViewAnnotationManager
 import com.mapbox.maps.viewannotation.viewAnnotationOptions
@@ -71,6 +66,7 @@ import com.mapbox.search.ui.adapter.autocomplete.PlaceAutocompleteUiAdapter
 import com.mapbox.search.ui.view.CommonSearchViewConfiguration
 import com.mapbox.search.ui.view.SearchResultsView
 import java.lang.ref.WeakReference
+import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 
 
@@ -90,39 +86,16 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     private lateinit var searchResultsView: SearchResultsView
     private lateinit var placeAutocompleteUiAdapter: PlaceAutocompleteUiAdapter
     private lateinit var queryEditText: EditText
+    private var collectionName ="restroom"
 
-
-    private val onIndicatorBearingChangedListener = OnIndicatorBearingChangedListener {
-        mapView.getMapboxMap().setCamera(CameraOptions.Builder().bearing(it).build())
-    }
-    private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener {
-        mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(it).build())
-        mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(it)
-    }
-    private val onMoveListener = object : OnMoveListener {
-        override fun onMove(detector: MoveGestureDetector): Boolean {
-            return false
-        }
-        override fun onMoveBegin(detector: MoveGestureDetector) {
-            onCameraTrackingDismissed()
-        }
-        override fun onMoveEnd(detector: MoveGestureDetector) {}
-    }
-
-    private fun onCameraTrackingDismissed() {
-        Toast.makeText(context, "onCameraTrackingDismissed", Toast.LENGTH_SHORT).show()
-        mapView.location
-            .removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
-        mapView.location
-            .removeOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
-        mapView.gestures.removeOnMoveListener(onMoveListener)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        // Inflate the layout using DataBindingUtil
         binding = FragmentExploreBinding.inflate(layoutInflater, container, false)
+//        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_explore, container, false)
         firestore = FirebaseFirestore.getInstance()
         mapView = binding.mapView
 
@@ -163,16 +136,20 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
             }
         }
 
-        placeAutocompleteUiAdapter.addSearchListener(object : PlaceAutocompleteUiAdapter.SearchListener {
+        placeAutocompleteUiAdapter.addSearchListener(object :
+            PlaceAutocompleteUiAdapter.SearchListener {
             override fun onSuggestionsShown(suggestions: List<PlaceAutocompleteSuggestion>) {
                 // Nothing to do
             }
+
             override fun onSuggestionSelected(suggestion: PlaceAutocompleteSuggestion) {
 //                openPlaceCard(suggestion)
             }
+
             override fun onPopulateQueryClick(suggestion: PlaceAutocompleteSuggestion) {
                 queryEditText.setText(suggestion.name)
             }
+
             override fun onError(e: Exception) {
                 // Nothing to do
             }
@@ -185,9 +162,9 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
         mapView.getMapboxMap().setCamera(
             CameraOptions.Builder()
                 .zoom(14.0)
-                .build())
-        initLocationComponent()
-        setupGesturesListener()
+                .build()
+        )
+
         val bitmap = BitmapFactory.decodeResource(resources, R.drawable.logo)
         markerWidth = bitmap.width
         markerHeight = bitmap.height
@@ -207,47 +184,9 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
         }
     }
 
-    private fun setupGesturesListener() {
-        mapView.gestures.addOnMoveListener(onMoveListener)
-    }
-
-    private fun initLocationComponent() {
-        val locationComponentPlugin = mapView.location
-        locationComponentPlugin.updateSettings {
-            this.enabled = true
-            this.locationPuck = LocationPuck2D(
-                bearingImage = context?.let {
-                    AppCompatResources.getDrawable(
-                        it,
-                        R.drawable.mapbox_user_puck_icon,
-                    )
-                },
-                shadowImage = context?.let {
-                    AppCompatResources.getDrawable(
-                        it,
-                        R.drawable.mapbox_user_icon_shadow,
-                    )
-                },
-                scaleExpression = interpolate {
-                    linear()
-                    zoom()
-                    stop {
-                        literal(0.0)
-                        literal(0.6)
-                    }
-                    stop {
-                        literal(20.0)
-                        literal(1.0)
-                    }
-                }.toJson()
-            )
-        }
-        locationComponentPlugin.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
-        locationComponentPlugin.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
-    }
 
     @SuppressLint("SuspiciousIndentation")
-    private fun getPlaceByCoordinates(id:String, point: Point){
+    private fun getPlaceByCoordinates(id: String, point: Point) {
         //lifecycle  response for autocomplete
         lifecycleScope.launchWhenCreated {
             val response = placeAutocomplete.suggestions(point)
@@ -258,8 +197,8 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                     val selectionResponse = placeAutocomplete.select(selectedSuggestion)
                     selectionResponse.onValue { result ->
                         val resultAddress = result.address
-                        Toast.makeText(context,"${result.address}",Toast.LENGTH_LONG).show()
-                        Log.i("address","${result.address}")
+                        Toast.makeText(context, "${result.address}", Toast.LENGTH_LONG).show()
+                        Log.i("address", "${result.address}")
                         val dataMap = parseResultName(resultAddress)
                         if (dataMap.isNotEmpty()) {
                             // Access fields from dataMap
@@ -276,14 +215,17 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                             val countryIso1 = dataMap["countryIso1"]
                             val countryIso2 = dataMap["countryIso2"]
                             //add in firebase using toilet data class
-                            val newToiletLocation = Toilet(id,result.coordinate.longitude(),
-                                result.coordinate.latitude(),houseNumber, street, neighborhood,
+                            val newToiletLocation = Restroom(
+                                id, result.coordinate.longitude(),
+                                result.coordinate.latitude(), houseNumber, street, neighborhood,
                                 locality, postcode, place, district, region, country,
-                                formattedAddress, countryIso1, countryIso2)
+                                formattedAddress, countryIso1, countryIso2
+                            )
                             addData(newToiletLocation)
                         } else {
                             // Handle the case when the list is empty
-                            Toast.makeText(context,"Empty mapping of data",Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Empty mapping of data", Toast.LENGTH_SHORT)
+                                .show()
                         }
 
                     }.onError { e ->
@@ -295,6 +237,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
             }
         }
     }
+
     private fun parseResultName(input: PlaceAutocompleteAddress?): Map<String, String> {
         return input?.toString()
             ?.removePrefix("PlaceAutocompleteAddress(")
@@ -313,7 +256,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     }
 
 
-    private fun prepareStyle( styleUri: String, bitmap: Bitmap) = style(styleUri) {
+    private fun prepareStyle(styleUri: String, bitmap: Bitmap) = style(styleUri) {
         +image(TOILET_ICON_ID) {
             bitmap(bitmap)
         }
@@ -327,28 +270,30 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
             +terrain(TERRAIN_SOURCE)
         }
         +symbolLayer(LAYER_ID, SOURCE_ID) {
-            iconImage(TOILET_ICON_ID )
+            iconImage(TOILET_ICON_ID)
             iconAnchor(IconAnchor.BOTTOM)
             iconAllowOverlap(false)
         }
     }
-    private fun addData(toilets: Toilet) {
-        Firebase.firestore.collection("toilets")
-            .add(toilets).addOnSuccessListener {
+
+    private fun addData(restroom: Restroom) {
+        Firebase.firestore.collection("restroom")
+            .add(restroom).addOnSuccessListener {
                 Log.d("SUCCESS_TAG", "Success!")
             }
             .addOnFailureListener { e ->
                 Log.e("SUCCESS_TAG", "Failed! $e")
             }
     }
-    private fun getAllData(collectionName: String, callback: (MutableList<Toilet>) -> Unit) {
+
+    private fun getAllData(collectionName: String, callback: (MutableList<Restroom>) -> Unit) {
         val db = FirebaseFirestore.getInstance()
         val collectionRef = db.collection(collectionName)
         collectionRef.get()
             .addOnSuccessListener { result ->
-                val locationList = mutableListOf<Toilet>()
+                val locationList = mutableListOf<Restroom>()
                 for (document in result) {
-                    val toiletLocation = Toilet(
+                    val restroomLocation = Restroom(
                         document.data["markerId"].toString(),
                         document.data["longitude"].toString().toDouble(),
                         document.data["latitude"].toString().toDouble(),
@@ -363,9 +308,10 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                         document.data["country"].toString(),
                         document.data["formattedAddress"].toString(),
                         document.data["countryIso1"].toString(),
-                        document.data["countryIso2"].toString())
+                        document.data["countryIso2"].toString()
+                    )
 
-                    locationList.add(toiletLocation)
+                    locationList.add(restroomLocation)
                 }
                 callback(locationList)
             }
@@ -379,7 +325,6 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
         alertDialogBuilder?.setTitle("Add Toilet Location")
         alertDialogBuilder?.setMessage("Would you like to add this location?")
         alertDialogBuilder?.setPositiveButton("Continue") { dialog, _ ->
-            //Get Place By coordinate using API
             dialog.dismiss()
 
         }
@@ -392,6 +337,26 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
 
 
     }
+
+    private fun showRatingsPerToilet() {
+        val alertDialogBuilder = AlertDialog.Builder(requireContext())
+
+        // Inflate the dialog layout using Data Binding
+        val dialogBinding =
+            ActivityRatingsDialogBinding.inflate(LayoutInflater.from(requireContext()))
+
+        // Set the root view of the dialog to the root of the inflated layout
+        alertDialogBuilder.setView(dialogBinding.root)
+
+        alertDialogBuilder.setNegativeButton("Close") { dialog, _ ->
+            dialog.dismiss()
+        }
+
+        val alertDialog = alertDialogBuilder.create()
+        alertDialog.show()
+    }
+
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -400,6 +365,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         locationPermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
+
     override fun onStart() {
         super.onStart()
         mapView.onStart()
@@ -417,31 +383,62 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        mapView.location
-            .removeOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
-        mapView.location
-            .removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
-        mapView.gestures.removeOnMoveListener(onMoveListener)
         mapView.onDestroy()
     }
 
     override fun onMapLongClick(point: Point): Boolean {
         val markerId = addMarkerAndReturnId(point)
-        addViewAnnotation(point, markerId)
+
         return true
     }
-
     override fun onMapClick(point: Point): Boolean {
+
         map.queryRenderedFeatures(
-            RenderedQueryGeometry(map.pixelForCoordinate(point)), RenderedQueryOptions(listOf(LAYER_ID), null)
+            RenderedQueryGeometry(map.pixelForCoordinate(point)),
+            RenderedQueryOptions(listOf(LAYER_ID), null)
         ) { expected ->
             onFeatureClicked(expected) { feature ->
-                if (feature.id() != null) {
-                    viewAnnotationManager.getViewAnnotationByFeatureId(feature.id()!!)?.toggleViewVisibility()
+                fun displayViewAnnotation(featureId:String){
+                        // Toggle visibility of the annotation if it exists
+                        viewAnnotationManager.getViewAnnotationByFeatureId(featureId)
+                            ?.toggleViewVisibility()
+
+                }
+                getAllData(collectionName){ result->
+                    var matchFound = false
+
+                    // Iterate through your data to find the matching restroom
+                    for (restroom in result) {
+                        val restroomMarkerId = restroom.markerId.trim()
+                        if (restroomMarkerId == feature.id()) {
+                            Toast.makeText(context, "FID: ${feature.id()}, RID:$restroomMarkerId", Toast.LENGTH_SHORT).show()
+                            val newMarkerId = restroom.markerId
+                            val coordinate = Point.fromLngLat(restroom.longitude, restroom.latitude)
+                            val existingViewAnnotation = viewAnnotationManager.getViewAnnotationByFeatureId(restroomMarkerId)
+                            if(existingViewAnnotation!=null){
+                                displayViewAnnotation(feature.id().toString())
+                            }
+                            else{
+                                addViewAnnotation(coordinate, newMarkerId)
+                            }
+                            matchFound = true
+                            break // Exit the loop since a match is found
+                        }
+                    }
+                    if (!matchFound) {
+                        Toast.makeText(context, "Feature ID: ${feature.id()}, No matching restroom found", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
         return true
+    }
+    private fun handleMarkerPoint(point: Point): Point {
+      return point
+    }
+
+    private fun handleMarkerClick(point: Point): Boolean {
+        return point!=null
     }
 
     private fun onFeatureClicked(
@@ -464,7 +461,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
 
     //add marker
     private fun addMarkerAndReturnId(point: Point): String {
-        val currentId = "${MARKER_ID_PREFIX}${(markerId++)}"
+        val currentId =  UUID.randomUUID().toString()
         //Retrieve
         getPlaceByCoordinates(currentId,point)
         pointList.add(Feature.fromGeometry(point, null, currentId))
@@ -478,7 +475,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
 
     //display all markers in map
     private fun displayMarkers(){
-        getAllData("toilets") { locationList ->
+        getAllData("restroom") { locationList ->
             Toast.makeText(context, "${locationList.size} locations loaded.", Toast.LENGTH_SHORT).show()
             for(location in locationList){
                 val point = Point.fromLngLat(location.longitude,location.latitude)
@@ -517,7 +514,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                     "lat=%.2f\nlon=%.2f".format(point.latitude(), point.longitude())
                 viewAnnotation.findViewById<ImageView>(R.id.closeNativeView).setOnClickListener { _ ->
                     viewAnnotationManager.removeViewAnnotation(viewAnnotation)
-                }
+            }
                 viewAnnotation.findViewById<Button>(R.id.selectButton).setOnClickListener { b ->
                     val button = b as Button
                     val isSelected = button.text.toString().equals("SELECT", true)

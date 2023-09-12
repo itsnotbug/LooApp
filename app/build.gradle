@@ -62,20 +62,21 @@ dependencies {
     implementation('com.mapbox.maps:android:10.15.1') {
         exclude group: 'com.mapbox.common', module: 'okhttp'
     }
-    //search
-    implementation "com.mapbox.search:autofill:1.0.0-rc.6"
     //discover
     implementation "com.mapbox.search:discover:1.0.0-rc.6"
     //autocomplete
     implementation "com.mapbox.search:place-autocomplete:1.0.0-rc.6"
-    //offline search
-    implementation "com.mapbox.search:offline:1.0.0-rc.6"
     //search engine
     implementation "com.mapbox.search:mapbox-search-android:1.0.0-rc.6"
     //Search UI
     implementation "com.mapbox.search:mapbox-search-android-ui:1.0.0-rc.6"
     //Lifecycle
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.1"
+
+    //navigation mapbox
+//    implementation  'com.mapbox.navigation:ui:v10.15.1'
+//    implementation 'com.mapbox.navigation:navigation-ui-maps:v10.15.1'
+//    implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:9.7.1'
 
     //google play services vision for QR Code Scanner
     implementation 'com.google.android.gms:play-services-vision:20.1.3'

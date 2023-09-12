@@ -10,7 +10,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:theme="@style/Theme.Material3.Light">
+        android:background="@color/white">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/materialCardView"
@@ -34,6 +34,7 @@
         </com.google.android.material.card.MaterialCardView>
 
         <androidx.recyclerview.widget.RecyclerView
+            android:background="@color/white"
             android:id="@+id/recyclerView"
             android:layout_width="0dp"
             android:layout_height="0dp"

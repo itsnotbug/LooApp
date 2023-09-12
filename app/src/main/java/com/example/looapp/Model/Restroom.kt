@@ -1,6 +1,6 @@
 package com.example.looapp.Model
 
-data class Toilet(
+data class Restroom(
     val markerId:String,
     val longitude:Double,
     val latitude:Double,

@@ -9,8 +9,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.looapp.Adapters.ToiletAdapter
-import com.example.looapp.Model.Toilet
+import com.example.looapp.Adapters.RestroomAdapter
+import com.example.looapp.Model.Restroom
 import com.example.looapp.databinding.FragmentNearMeBinding
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Locale
@@ -18,8 +18,8 @@ import java.util.Locale
 class NearMeFragment : Fragment() {
     private lateinit var binding:FragmentNearMeBinding
     private lateinit var recycleView: RecyclerView
-    private lateinit var adapter: ToiletAdapter
-    private lateinit var toiletLocation: MutableList<Toilet>
+    private lateinit var adapter: RestroomAdapter
+    private lateinit var restroom: MutableList<Restroom>
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -31,13 +31,13 @@ class NearMeFragment : Fragment() {
         // Set up layout
         recycleView.layoutManager = LinearLayoutManager(context)
         // Get all Data from Firebase
-        adapter = ToiletAdapter(mutableListOf())
+        adapter = RestroomAdapter(mutableListOf())
         recycleView.adapter =adapter
 
-        getAllData("toilets"){coordinates->
+        getAllData("restroom"){coordinates->
             // Combine with Adapter
             adapter.updateData(coordinates)
-            toiletLocation =coordinates
+            restroom =coordinates
         }
 
           binding.searchView.setOnQueryTextListener(object:SearchView.OnQueryTextListener,
@@ -58,8 +58,8 @@ class NearMeFragment : Fragment() {
 
     private fun filterList(query: String?) {
             if(query!=null){
-                val filteredList = ArrayList<Toilet>()
-                for (i in toiletLocation){
+                val filteredList = ArrayList<Restroom>()
+                for (i in restroom){
                     if(i.formattedAddress?.lowercase(Locale.ROOT)!!.contains(query)){
                         filteredList.add(i)
                     }
@@ -75,14 +75,14 @@ class NearMeFragment : Fragment() {
 
 
 
-    private fun getAllData(collectionName: String, callback: (MutableList<Toilet>) -> Unit) {
+    private fun getAllData(collectionName: String, callback: (MutableList<Restroom>) -> Unit) {
         val db = FirebaseFirestore.getInstance()
         val collectionRef = db.collection(collectionName)
         collectionRef.get()
             .addOnSuccessListener { result ->
-                val locationList = mutableListOf<Toilet>()
+                val locationList = mutableListOf<Restroom>()
                 for (document in result) {
-                    val toiletLocation = Toilet(
+                    val restroom = Restroom(
                         document.data["markerId"].toString(),
                         document.data["longitude"].toString().toDouble(),
                         document.data["latitude"].toString().toDouble(),
@@ -98,7 +98,7 @@ class NearMeFragment : Fragment() {
                         document.data["formattedAddress"].toString(),
                         document.data["countryIso1"].toString(),
                         document.data["countryIso2"].toString())
-                    locationList.add(toiletLocation)
+                    locationList.add(restroom)
                 }
                 callback(locationList)
             }
