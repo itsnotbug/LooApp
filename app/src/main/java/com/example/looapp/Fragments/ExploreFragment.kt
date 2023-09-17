@@ -23,9 +23,13 @@ import androidx.lifecycle.lifecycleScope
 import com.example.looapp.LocationPermissionHelper
 import com.example.looapp.Model.Restroom
 import com.example.looapp.R
+import com.example.looapp.Restroom1
+import com.example.looapp.RestroomInterface
+import com.example.looapp.RestroomItem
 import com.example.looapp.Screens.RestroomRatings
 import com.example.looapp.databinding.ActivityRatingsDialogBinding
 import com.example.looapp.databinding.FragmentExploreBinding
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -67,6 +71,12 @@ import com.mapbox.search.autocomplete.PlaceAutocompleteAddress
 import com.mapbox.search.ui.adapter.autocomplete.PlaceAutocompleteUiAdapter
 import com.mapbox.search.ui.view.CommonSearchViewConfiguration
 import com.mapbox.search.ui.view.SearchResultsView
+import okhttp3.OkHttpClient
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.lang.ref.WeakReference
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -75,6 +85,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     private lateinit var mapView: MapView
     private lateinit var map: MapboxMap
+    private val apiEndpoint = "https://zylalabs.com/api/2086/available+public+bathrooms+api/1869/get+public+bathrooms/"
+    private val apiKey = "2137|lQ4sNFb5Vb4vWSJyqPXciewVRkW2NIBd7yxDRsxL"
     private lateinit var locationPermissionHelper: LocationPermissionHelper
     private lateinit var binding: FragmentExploreBinding
     private lateinit var firestore: FirebaseFirestore
@@ -88,7 +100,9 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     private lateinit var searchResultsView: SearchResultsView
     private lateinit var placeAutocompleteUiAdapter: PlaceAutocompleteUiAdapter
     private lateinit var queryEditText: EditText
-    private var collectionName ="restroom"
+    private var collectionName = "restroom"
+    private lateinit var restroom1:Restroom1
+
 
     private val onIndicatorBearingChangedListener = OnIndicatorBearingChangedListener {
         mapView.getMapboxMap().setCamera(CameraOptions.Builder().bearing(it).build())
@@ -127,6 +141,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
         //autocomplete
         placeAutocomplete = PlaceAutocomplete.create(getString(R.string.mapbox_access_token))
         queryEditText = binding.queryText
+
 
         //View Annotation Manager
         viewAnnotationManager = binding.mapView.viewAnnotationManager
@@ -170,6 +185,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                 addOnMapLongClickListener(this@ExploreFragment)
                 Toast.makeText(context, STARTUP_TEXT, Toast.LENGTH_LONG).show()
                 displayMarkers()
+//                getRestroom(14.5794,121.035,1,50)
             }
         }
     }
@@ -381,33 +397,71 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
 
         return true
     }
+
     override fun onMapClick(point: Point): Boolean {
         map.queryRenderedFeatures(
             RenderedQueryGeometry(map.pixelForCoordinate(point)),
             RenderedQueryOptions(listOf(LAYER_ID), null)
         ) { expected ->
             onFeatureClicked(expected) { feature ->
-                fun displayViewAnnotation(featureId:String){
-                        // Toggle visibility of the annotation if it exists
-                        viewAnnotationManager.getViewAnnotationByFeatureId(featureId)
-                            ?.toggleViewVisibility()
+                fun displayViewAnnotation(featureId: String) {
+                    // Toggle visibility of the annotation if it exists
+                    viewAnnotationManager.getViewAnnotationByFeatureId(featureId)
+                        ?.toggleViewVisibility()
 
                 }
-                getAllData(collectionName){ result->
+//                getAllData(collectionName) { result ->
+//                    var matchFound = false
+//
+//                    // Iterate through your data to find the matching restroom
+//                    for (restroom in result) {
+//                        val restroomMarkerId = restroom.markerId.trim()
+//                        if (restroomMarkerId == feature.id()) {
+////                            Toast.makeText(
+////                                context,
+////                                "FID: ${feature.id()}, RID:$restroomMarkerId",
+////                                Toast.LENGTH_SHORT
+////                            ).show()
+//                            val newMarkerId = restroom.markerId
+//                            val coordinate = Point.fromLngLat(restroom.longitude, restroom.latitude)
+//                            val existingViewAnnotation =
+//                                viewAnnotationManager.getViewAnnotationByFeatureId(restroomMarkerId)
+//                            if (existingViewAnnotation != null) {
+//                                displayViewAnnotation(feature.id().toString())
+//                            } else {
+//                                addViewAnnotation(coordinate, newMarkerId)
+//                            }
+//                            matchFound = true
+//                            break // Exit the loop since a match is found
+//                        }
+//                    }
+//                    if (!matchFound) {
+//                        Toast.makeText(
+//                            context,
+//                            "Feature ID: ${feature.id()}, No ratings yet",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    }
+//                }
+                getAllRestroom(collectionName) { result ->
                     var matchFound = false
 
                     // Iterate through your data to find the matching restroom
                     for (restroom in result) {
                         val restroomMarkerId = restroom.markerId.trim()
                         if (restroomMarkerId == feature.id()) {
-                            Toast.makeText(context, "FID: ${feature.id()}, RID:$restroomMarkerId", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "FID: ${feature.id()}, RID:$restroomMarkerId",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             val newMarkerId = restroom.markerId
                             val coordinate = Point.fromLngLat(restroom.longitude, restroom.latitude)
-                            val existingViewAnnotation = viewAnnotationManager.getViewAnnotationByFeatureId(restroomMarkerId)
-                            if(existingViewAnnotation!=null){
+                            val existingViewAnnotation =
+                                viewAnnotationManager.getViewAnnotationByFeatureId(restroomMarkerId)
+                            if (existingViewAnnotation != null) {
                                 displayViewAnnotation(feature.id().toString())
-                            }
-                            else{
+                            } else {
                                 addViewAnnotation(coordinate, newMarkerId)
                             }
                             matchFound = true
@@ -415,28 +469,34 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                         }
                     }
                     if (!matchFound) {
-                        Toast.makeText(context, "Feature ID: ${feature.id()}, No ratings yet", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Feature ID: ${feature.id()}, No ratings yet",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
         }
         return true
     }
+
     private fun rateRestroom(point: Point, markerId: String) {
-        var myIntent = Intent(context,RestroomRatings::class.java)
+        var myIntent = Intent(context, RestroomRatings::class.java)
         val mBundle = Bundle()
-        mBundle.putDouble("latitude",point.latitude())
-        mBundle.putDouble("longitude",point.longitude())
-        mBundle.putString("markerId",markerId)
+        mBundle.putDouble("latitude", point.latitude())
+        mBundle.putDouble("longitude", point.longitude())
+        mBundle.putString("markerId", markerId)
         myIntent.putExtras(mBundle)
         startActivity(myIntent)
     }
+
     private fun handleMarkerPoint(point: Point): Point {
-      return point
+        return point
     }
 
     private fun handleMarkerClick(point: Point): Boolean {
-        return point!=null
+        return point != null
     }
 
     private fun onFeatureClicked(
@@ -471,19 +531,74 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
     }
 
 
+
     //display all markers in map
     private fun displayMarkers(){
-        getAllData("restroom") { locationList ->
-            Toast.makeText(context, "${locationList.size} locations loaded.", Toast.LENGTH_SHORT).show()
-            for(location in locationList){
-                val point = Point.fromLngLat(location.longitude,location.latitude)
-                pointList.add(Feature.fromGeometry(point, null, location.markerId))
+        getAllRestroom("restroom1"){restroomItems ->
+            for(items in restroomItems){
+                val point = Point.fromLngLat(items.longitude,items.latitude)
+                pointList.add(Feature.fromGeometry(point, null, items.markerId))
             }
+//        }
+//        getAllData("restroom") { locationList ->
+//            Toast.makeText(context, "${locationList.size} locations loaded.", Toast.LENGTH_SHORT).show()
+//            for(location in locationList){
+//                val point = Point.fromLngLat(location.longitude,location.latitude)
+//                pointList.add(Feature.fromGeometry(point, null, location.markerId))
+//            }
             val featureCollection = FeatureCollection.fromFeatures(pointList)
             map.getStyle { style ->
                 style.getSourceAs<GeoJsonSource>(SOURCE_ID)?.featureCollection(featureCollection)
             }
         }
+    }
+    private fun documentToRestroomItem(document: DocumentSnapshot): RestroomItem {
+        val data = document.data
+        if (data != null) {
+            return RestroomItem(
+                data["markerId"].toString(),
+                data["accessible"] as? Boolean ?: false,
+                data["approved"] as? Boolean ?: false,
+                data["bearing"].toString(),
+                data["changing_table"] as? Boolean ?: false,
+                data["city"].toString(),
+                data["comment"].toString(),
+                data["country"].toString(),
+                data["created_at"].toString(),
+                data["directions"].toString(),
+                (data["distance"] as? Number)?.toDouble() ?: 0.0,
+                (data["downvote"] as? Number)?.toInt() ?: 0,
+                (data["edit_id"] as? Number)?.toInt() ?: 0,
+                (data["id"] as? Number)?.toInt() ?: 0,
+                (data["latitude"] as? Number)?.toDouble() ?: 0.0,
+                (data["longitude"] as? Number)?.toDouble() ?: 0.0,
+                data["name"].toString(),
+                data["state"].toString(),
+                data["street"].toString(),
+                data["unisex"] as? Boolean ?: false,
+                data["updated_at"].toString(),
+                (data["upvote"] as? Number)?.toInt() ?: 0
+            )
+        }
+        return RestroomItem("", false, false, "", false, "", "", "", "", "", 0.0, 0, 0, 0, 0.0, 0.0, "", "", "", false, "", 0)
+    }
+    private fun getAllRestroom(collectionName: String, callback: (MutableList<RestroomItem>) -> Unit) {
+        val db = FirebaseFirestore.getInstance()
+        val collectionRef = db.collection(collectionName)
+
+        collectionRef.get()
+            .addOnSuccessListener { result ->
+                val restroomList1 = mutableListOf<RestroomItem>()
+                for (document in result) {
+                    val restroomItem = documentToRestroomItem(document)
+                    restroomList1.add(restroomItem)
+                }
+                callback(restroomList1)
+            }
+            .addOnFailureListener { exception ->
+                // Handle the error
+                Log.d("Firestore", "Error getting documents: $exception")
+            }
     }
 
 
@@ -515,8 +630,9 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
             }
                 viewAnnotation.findViewById<Button>(R.id.selectButton).setOnClickListener { b ->
                     val button = b as Button
-                    val isSelected = button.text.toString().equals("SELECT", true)
+                    val isSelected = button.text.toString().equals("RATE ME", true)
                     val pxDelta = (if (isSelected) SELECTED_ADD_COEF_DP.dpToPx() else -SELECTED_ADD_COEF_DP.dpToPx()).toInt()
+                    button.text = if (isSelected) "BACK" else "RATE ME"
                     if(isSelected){
                         rateRestroom(point,markerId)
                     }
@@ -536,7 +652,69 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
             }
         }
     }
+    private fun saveRestroomItem(restroomItem: RestroomItem, markerId: String) {
+        // Reference to the Firestore collection
+        val collectionRef = firestore.collection("restroom1")
+        restroomItem.markerId = markerId
+        // Add a new document with a randomly generated ID
+        collectionRef
+            .add(restroomItem)
+            .addOnSuccessListener { documentReference ->
+                Log.d("Firestore", "DocumentSnapshot added with ID: ${documentReference.id}")
+                // Handle success here
+            }
+            .addOnFailureListener { e ->
+                Log.w("Firestore", "Error adding document", e)
+                // Handle the error here
+            }
+    }
+    private fun getRestroom(latitude: Double, longitude: Double, page: Int, perPage: Int) {
+        val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val original = chain.request()
+                val requestBuilder = original.newBuilder()
+                    .header("Authorization", "Bearer $apiKey") // Add the bearer token header
+                    .method(original.method, original.body)
+                val request = requestBuilder.build()
+                chain.proceed(request)
+            }
+            .build()
+        val api = Retrofit.Builder()
+            .baseUrl(apiEndpoint)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(RestroomInterface::class.java)
+        api.getPublicBathrooms(latitude, longitude, page, perPage)
+            .enqueue(object : Callback<Restroom1> {
+                override fun onResponse(call: Call<Restroom1>, response: Response<Restroom1>) {
+                    if (response.isSuccessful) {
+                        restroom1= response.body()!!
+                        if (restroom1 != null) {
 
+                            for (r in restroom1) {
+                                val restCoordinate = Point.fromLngLat(r.longitude,r.latitude)
+                                val id = addMarkerAndReturnId(restCoordinate)
+                                saveRestroomItem(r,id)
+//                                Toast.makeText(context, "$id", Toast.LENGTH_SHORT).show()
+
+                            }
+                        } else {
+
+                            Toast.makeText(context, "NOT FOUND", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(context, "Response ${response.code()}", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                }
+
+                override fun onFailure(call: Call<Restroom1>, t: Throwable) {
+                    Log.d("MYAPI", "Error $t")
+                }
+
+            })
+    }
     private fun Float.dpToPx() = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
         this,

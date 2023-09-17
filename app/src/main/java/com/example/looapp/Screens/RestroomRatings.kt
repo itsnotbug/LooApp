@@ -170,7 +170,7 @@ class RestroomRatings : AppCompatActivity() {
         )
 
         // Update the data in Firestore with the combined map
-        firestore.collection("ratings")
+        firestore.collection("ratings1")
             .add(combinedData)
             .addOnSuccessListener { documentReference ->
                 Log.d("SUCCESS_TAG", "Data Added with ID: ${documentReference.id}")
