@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
+import com.example.looapp.Fragments.ContributeFragment
 import com.example.looapp.Fragments.ExploreFragment
 import com.example.looapp.Fragments.NearMeFragment
 import com.example.looapp.Fragments.TransactFragment
@@ -23,6 +24,7 @@ class MainActivity : AppCompatActivity(){
         val exploreFragment =  ExploreFragment()
         val nearMeFragment  =  NearMeFragment()
         val transactFragment = TransactFragment()
+        val contributeFragment = ContributeFragment()
 
         //Fragments
         supportFragmentManager.beginTransaction().apply {
@@ -31,7 +33,7 @@ class MainActivity : AppCompatActivity(){
         }
 
         //initialized view Model holder
-        var viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
+        val viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
         binding.mainViewModel =viewModel
 
 
@@ -54,6 +56,12 @@ class MainActivity : AppCompatActivity(){
                 R.id.itemTransact->{
                     this.supportFragmentManager.beginTransaction().apply {
                         replace(R.id.fragmentContainerView, transactFragment)
+                        commit()
+                    }
+                }
+                R.id.itemContribute->{
+                    this.supportFragmentManager.beginTransaction().apply {
+                        replace(R.id.fragmentContainerView, contributeFragment)
                         commit()
                     }
                 }

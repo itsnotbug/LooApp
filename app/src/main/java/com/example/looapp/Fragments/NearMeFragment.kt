@@ -1,6 +1,7 @@
 package com.example.looapp.Fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,16 +11,19 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.looapp.Adapters.RestroomAdapter
-import com.example.looapp.Model.Restroom
+import com.example.looapp.FirebaseConnection
+import com.example.looapp.Model.RestroomItem
 import com.example.looapp.databinding.FragmentNearMeBinding
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 import java.util.Locale
 
 class NearMeFragment : Fragment() {
     private lateinit var binding:FragmentNearMeBinding
     private lateinit var recycleView: RecyclerView
     private lateinit var adapter: RestroomAdapter
-    private lateinit var restroom: MutableList<Restroom>
+    private lateinit var restroom: MutableList<RestroomItem>
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -34,12 +38,11 @@ class NearMeFragment : Fragment() {
         adapter = RestroomAdapter(mutableListOf())
         recycleView.adapter =adapter
 
-        getAllData("restroom"){coordinates->
-            // Combine with Adapter
+        val firebaseConnection = FirebaseConnection()
+        firebaseConnection.getAllRestroom("restroom"){ coordinates->
             adapter.updateData(coordinates)
             restroom =coordinates
         }
-
           binding.searchView.setOnQueryTextListener(object:SearchView.OnQueryTextListener,
               androidx.appcompat.widget.SearchView.OnQueryTextListener {
               override fun onQueryTextSubmit(query: String?): Boolean {
@@ -50,17 +53,15 @@ class NearMeFragment : Fragment() {
                   filterList(newText)
                   return true
               }
-
           })
-
         return binding.root
     }
 
     private fun filterList(query: String?) {
             if(query!=null){
-                val filteredList = ArrayList<Restroom>()
+                val filteredList = ArrayList<RestroomItem>()
                 for (i in restroom){
-                    if(i.formattedAddress?.lowercase(Locale.ROOT)!!.contains(query)){
+                    if(i.street.lowercase(Locale.ROOT)!!.contains(query)){
                         filteredList.add(i)
                     }
                 }
@@ -72,39 +73,4 @@ class NearMeFragment : Fragment() {
                 }
             }
         }
-
-
-
-    private fun getAllData(collectionName: String, callback: (MutableList<Restroom>) -> Unit) {
-        val db = FirebaseFirestore.getInstance()
-        val collectionRef = db.collection(collectionName)
-        collectionRef.get()
-            .addOnSuccessListener { result ->
-                val locationList = mutableListOf<Restroom>()
-                for (document in result) {
-                    val restroom = Restroom(
-                        document.data["markerId"].toString(),
-                        document.data["longitude"].toString().toDouble(),
-                        document.data["latitude"].toString().toDouble(),
-                        document.data["houseNumber"].toString(),
-                        document.data["street"].toString(),
-                        document.data["neighborhood"].toString(),
-                        document.data["locality"].toString(),
-                        document.data["postcode"].toString(),
-                        document.data["place"].toString(),
-                        document.data["district"].toString(),
-                        document.data["region"].toString(),
-                        document.data["country"].toString(),
-                        document.data["formattedAddress"].toString(),
-                        document.data["countryIso1"].toString(),
-                        document.data["countryIso2"].toString())
-                    locationList.add(restroom)
-                }
-                callback(locationList)
-            }
-            .addOnFailureListener {
-                Toast.makeText(context, "Error Occurred!", Toast.LENGTH_SHORT).show()
-            }
-    }
-
 }

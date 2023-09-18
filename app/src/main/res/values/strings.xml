@@ -30,9 +30,17 @@
     <string name="btn_required_fee">Requires Fee</string>
     <string name="btn_required_key">Requires Key</string>
     <!--Contribute fill up text box-->
-    <string name="text_location">Enter Name of the Place</string>
-    <string name="text_complete_address">Enter Complete Address</string>
+    <string name="text_location">Name of the Place</string>
+    <string name="text_street">Street</string>
+    <string name="text_city">City</string>
+    <string name="text_country">Country</string>
+    <string name="text_state">State (Optional)</string>
     <string name="text_description">Description (Optional)</string>
+    <string name="text_comments">Comments</string>
+    <string name="text_accessible">Is the restroom accessible to all?</string>
+    <string name="text_unisex">Is this toilet designed for use by any gender?</string>
+    <string name="text_change">Does it equipped a changing table?</string>
+    <string name="btn_submit">Submit Request</string>
     <!--Button to request adding location!-->
     <string name="btn_request_add">Add Restroom</string>
     <!--added from sampleBern !-->
@@ -45,4 +53,6 @@
     <string name="discover_search_nearby">Search</string>
     <string name="discover_search_in_area">Search for selected area</string>
     <string name="discover_search_error">Error happened during search request</string>
+    <!--Ratings-->
+
 </resources>

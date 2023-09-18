@@ -10,7 +10,6 @@ class RegistrationViewModel:ViewModel() {
     private val _registrationResult = MutableLiveData<Boolean>()
     val registrationResult:LiveData<Boolean> get() = _registrationResult
 
-
     //perform registration
     fun register(email:String,password:String){
         auth.createUserWithEmailAndPassword(email,password)

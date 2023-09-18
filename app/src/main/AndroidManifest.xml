@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- Supported Screen -->
+
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="false" />
-
+        android:required="false" /> <!-- Supported Screen -->
     <supports-screens
         android:largeScreens="true"
         android:normalScreens="true"
         android:smallScreens="true"
         android:xlargeScreens="true" /> <!-- permission -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -29,8 +29,12 @@
         android:theme="@style/Theme.LooApp"
         tools:targetApi="31">
         <activity
+            android:name=".ToiletDetails"
+            android:exported="false" />
+        <activity
             android:name=".Screens.RestroomRatings"
-            android:exported="true"/>
+            android:exported="true" />
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
@@ -43,7 +47,7 @@
             android:exported="false" />
         <activity
             android:name=".Screens.SplashScreen"
-            android:exported="true"/>
+            android:exported="true" />
         <activity
             android:name=".Screens.MainActivity"
             android:exported="true">
@@ -53,7 +57,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>

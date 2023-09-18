@@ -106,9 +106,6 @@ class RestroomRatings : AppCompatActivity() {
             emojiImageView.setImageResource(emojiDrawableId)
         }
     }
-
-
-
     private fun toggleCheckedState(checkedTextView: CheckedTextView) {
         // Apply the custom layout as the background when checked
         val drawableId = if (checkedTextView.isChecked) {
@@ -139,6 +136,7 @@ class RestroomRatings : AppCompatActivity() {
         val cleanliness = oneRating.toFloatOrNull()
         val maintenance = twoRating.toFloatOrNull()
         val overallExperience = overAllRating.toFloatOrNull()
+        val comments  = binding.txtTellUsMore.toString()
 
         // Create a map with the checked states data
         val checkedData = mapOf(
@@ -160,7 +158,8 @@ class RestroomRatings : AppCompatActivity() {
             "latitude" to latitude,
             "cleanliness" to cleanliness,
             "maintenance" to maintenance,
-            "overAllRating" to overallExperience
+            "overAllRating" to overallExperience,
+            "comments" to comments
         )
 
         // Combine checked data and ratings data into a single map
@@ -170,7 +169,7 @@ class RestroomRatings : AppCompatActivity() {
         )
 
         // Update the data in Firestore with the combined map
-        firestore.collection("ratings1")
+        firestore.collection("ratings")
             .add(combinedData)
             .addOnSuccessListener { documentReference ->
                 Log.d("SUCCESS_TAG", "Data Added with ID: ${documentReference.id}")

@@ -63,8 +63,6 @@ dependencies {
         exclude group: 'com.mapbox.common', module: 'okhttp'
     }
     implementation("com.google.android.gms:play-services-location:21.0.1")
-    //discover
-    implementation "com.mapbox.search:discover:1.0.0-rc.6"
     //autocomplete
     implementation "com.mapbox.search:place-autocomplete:1.0.0-rc.6"
     //search engine

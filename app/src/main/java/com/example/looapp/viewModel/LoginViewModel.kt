@@ -17,7 +17,6 @@ class LoginViewModel:ViewModel() {
                 _loginResult.value = task.isSuccessful
             }
     }
-
     override fun onCleared() {
         super.onCleared()
     }

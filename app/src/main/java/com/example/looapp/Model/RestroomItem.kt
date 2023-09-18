@@ -1,4 +1,4 @@
-package com.example.looapp
+package com.example.looapp.Model
 
 data class RestroomItem(
     var markerId:String,

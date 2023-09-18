@@ -1,17 +1,13 @@
 package com.example.looapp.Fragments
 
 import android.os.Bundle
-import android.os.Trace
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import com.example.looapp.Model.Restroom
 import com.example.looapp.R
-import com.example.looapp.databinding.FragmentExploreBinding
 import com.example.looapp.databinding.FragmentTransactBinding
 import com.example.looapp.databinding.TransactDialogLayoutBinding
 

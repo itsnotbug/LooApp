@@ -3,16 +3,16 @@ package com.example.looapp.Adapters
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.looapp.Model.Restroom
+import com.example.looapp.Model.RestroomItem
 import com.example.looapp.databinding.RestroomItemLayoutBinding
 
-class RestroomAdapter(var restroomList:MutableList<Restroom>):RecyclerView.Adapter<RestroomViewHolder>(){
-fun updateData(newList: List<Restroom>) {
+class RestroomAdapter(var restroomList:MutableList<RestroomItem>):RecyclerView.Adapter<RestroomViewHolder>(){
+fun updateData(newList: MutableList<RestroomItem>) {
     restroomList.clear()
     restroomList.addAll(newList)
     notifyDataSetChanged()
 }
-    fun setFiltered(filterList:MutableList<Restroom>){
+    fun setFiltered(filterList:MutableList<RestroomItem>){
         this.restroomList =filterList
         notifyDataSetChanged()
     }
