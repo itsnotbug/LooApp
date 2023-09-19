@@ -26,5 +26,6 @@ fun updateData(newList: MutableList<RestroomItem>) {
     }
     override fun onBindViewHolder(holder: RestroomViewHolder, position: Int) {
       holder.bind(restroomList[position])
+
     }
 }

@@ -47,7 +47,8 @@
             android:exported="false" />
         <activity
             android:name=".Screens.SplashScreen"
-            android:exported="true" />
+            android:exported="true"/>
+
         <activity
             android:name=".Screens.MainActivity"
             android:exported="true">

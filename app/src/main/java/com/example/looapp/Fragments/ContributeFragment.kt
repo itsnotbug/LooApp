@@ -15,14 +15,13 @@ import com.example.looapp.Model.RestroomItem
 import com.example.looapp.Model.RestroomMapbox
 import com.example.looapp.R
 import com.example.looapp.databinding.FragmentContributeBinding
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.search.autocomplete.PlaceAutocomplete
 import com.mapbox.search.autocomplete.PlaceAutocompleteAddress
 import java.time.LocalDate
+import java.util.UUID
 
 class ContributeFragment : Fragment() {
     private lateinit var binding:FragmentContributeBinding
@@ -30,9 +29,7 @@ class ContributeFragment : Fragment() {
     private lateinit var placeAutocomplete: PlaceAutocomplete
     private lateinit var mapView: MapView
     private lateinit var map: MapboxMap
-
-
-
+    private var markerId =""
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,41 +38,34 @@ class ContributeFragment : Fragment() {
         // Inflate the layout for this fragment
         binding = FragmentContributeBinding.inflate(layoutInflater, container, false)
         placeAutocomplete = PlaceAutocomplete.create(getString(R.string.mapbox_access_token))
-        val passLongitude = requireArguments().getDouble("longitude")
-        val passLatitude = requireArguments().getDouble("latitude")
-        val passMarkerId = requireArguments().getString("markerId")
-        val point = Point.fromLngLat(passLongitude,passLatitude)
+        val bundle = arguments
+        if (bundle != null) {
+            val passLongitude = bundle.getDouble("longitude")
+            val passLatitude = bundle.getDouble("latitude")
+            val passMarkerId = bundle.getString("markerId")
+            markerId = passMarkerId.toString()
+            val point = Point.fromLngLat(passLongitude, passLatitude)
 
-
-
-
-//        // Load the map asynchronously
-//        mapView.getMapAsync { mapboxMap ->
-//            // Set the camera position to the desired latitude and longitude
-//            val cameraPosition = CameraPosition.Builder()
-//                .target(LatLng(passLatitude, passLongitude))
-//                .zoom(15.0F) // Adjust the zoom level as needed
-//                .build()
-//
-//            // Animate the camera to the desired position
-//
-//            mapboxMap.animateCamera(com.mapbox.mapboxsdk.camera.CameraUpdateFactory.newCameraPosition(cameraPosition))
-//       }
-        if(passLatitude!=null && passLatitude!=null && passMarkerId!=null && point!=null){
-            if (passMarkerId != null) { getPlaceByCoordinates(passMarkerId, point) { restMapbox ->
-                    for (restroom in restMapbox) {
-                        if (restroom.id == passMarkerId) {
-                            binding.etStreet.setText(restroom.street)
-                            binding.etCity.setText(restroom.formattedAddress)
-                            binding.etCountry.setText(restroom.country)
-                            Toast.makeText(context, "${restroom.street}", Toast.LENGTH_SHORT).show()
-                            break
+            // Use the data passed via bundle
+            if (point != null && passMarkerId != null) {
+                if (passMarkerId != null) {
+                    getPlaceByCoordinates(markerId, point) { restMapbox ->
+                        for (restroom in restMapbox) {
+                            if (restroom.id == passMarkerId) {
+                                binding.etStreet.setText(restroom.street)
+                                binding.etCity.setText(restroom.formattedAddress)
+                                binding.etCountry.setText(restroom.country)
+                                Toast.makeText(context, "${restroom.street}", Toast.LENGTH_SHORT)
+                                    .show()
+                                break
+                            }
                         }
                     }
                 }
+            }else{
+                  markerId = UUID.randomUUID().toString()
             }
-        }
-        else{
+
             binding.btnSubmitRequest.setOnClickListener {
                 val nameOfPlace = binding.etName.text.toString()
                 val street = binding.etStreet.text.toString()
@@ -86,83 +76,74 @@ class ContributeFragment : Fragment() {
                 val directions = binding.etDirections.text.toString()
                 var isAccessible = false
                 var isUniSex = false
-                var hasChangingTable =false
+                var hasChangingTable = false
 
                 binding.btnGrpAccess.setOnCheckedChangeListener { _, checkedId ->
-                    when(checkedId){
-                        R.id.rbYes->{isAccessible=true}
-                        R.id.rbNo->{isAccessible=false}
+                    when (checkedId) {
+                        R.id.rbYes -> {
+                            isAccessible = true
+                        }
+
+                        R.id.rbNo -> {
+                            isAccessible = false
+                        }
                     }
                 }
-                binding.rbGrpGender.setOnCheckedChangeListener{_, checkedId->
-                    when(checkedId){
-                        R.id.rbGenderYes->{isUniSex=true}
-                        R.id.rbGenderNo->{isUniSex=false}
+                binding.rbGrpGender.setOnCheckedChangeListener { _, checkedId ->
+                    when (checkedId) {
+                        R.id.rbGenderYes -> {
+                            isUniSex = true
+                        }
+
+                        R.id.rbGenderNo -> {
+                            isUniSex = false
+                        }
                     }
                 }
-                binding.bGChangingTable.setOnCheckedChangeListener{_,checkedId->
-                    when(checkedId){
-                        R.id.rbChangeYes->{hasChangingTable=true}
-                        R.id.rbChangeNo->{hasChangingTable=false}
+                binding.bGChangingTable.setOnCheckedChangeListener { _, checkedId ->
+                    when (checkedId) {
+                        R.id.rbChangeYes -> {
+                            hasChangingTable = true
+                        }
+
+                        R.id.rbChangeNo -> {
+                            hasChangingTable = false
+                        }
                     }
                 }
 
                 // Compute the values for currentDate, timestampId, and uniqueId inside submitRequested
                 val currentDate = LocalDate.now().toString()
-
-
                 var counter = 100
                 fun generateUniqueInt(): Int {
                     return counter++
                 }
+
                 val editId = generateUniqueInt()
 
-                submitRequested(nameOfPlace, street, state, city, country, comments, directions, isAccessible, isUniSex, currentDate, editId, passMarkerId,hasChangingTable,passLatitude,passLongitude)
-            }
-        }
-
-        binding.btnSubmitRequest.setOnClickListener {
-            val nameOfPlace = binding.etName.text.toString()
-            val street = binding.etStreet.text.toString()
-            val state = binding.etState.text.toString()
-            val city = binding.etCity.text.toString()
-            val country = binding.etCountry.text.toString()
-            val comments = binding.etComments.text.toString()
-            val directions = binding.etDirections.text.toString()
-            var isAccessible = false
-            var isUniSex = false
-            var hasChangingTable =false
-
-            binding.btnGrpAccess.setOnCheckedChangeListener { _, checkedId ->
-                when(checkedId){
-                    R.id.rbYes->{isAccessible=true}
-                    R.id.rbNo->{isAccessible=false}
+                val result = submitRequested(
+                    nameOfPlace,
+                    street,
+                    state,
+                    city,
+                    country,
+                    comments,
+                    directions,
+                    isAccessible,
+                    isUniSex,
+                    currentDate,
+                    editId,
+                    markerId,
+                    hasChangingTable,
+                    passLatitude,
+                    passLongitude
+                )
+                if(result){
+                    Toast.makeText(context,"Submitted successfully!",Toast.LENGTH_SHORT).show()
+                }else{
+                    Toast.makeText(context,"Submission failed!",Toast.LENGTH_SHORT).show()
                 }
             }
-            binding.rbGrpGender.setOnCheckedChangeListener{_, checkedId->
-                when(checkedId){
-                    R.id.rbGenderYes->{isUniSex=true}
-                    R.id.rbGenderNo->{isUniSex=false}
-                }
-            }
-            binding.bGChangingTable.setOnCheckedChangeListener{_,checkedId->
-                when(checkedId){
-                    R.id.rbChangeYes->{hasChangingTable=true}
-                    R.id.rbChangeNo->{hasChangingTable=false}
-                }
-            }
-
-            // Compute the values for currentDate, timestampId, and uniqueId inside submitRequested
-            val currentDate = LocalDate.now().toString()
-
-
-            var counter = 100
-            fun generateUniqueInt(): Int {
-                return counter++
-            }
-            val editId = generateUniqueInt()
-
-            submitRequested(nameOfPlace, street, state, city, country, comments, directions, isAccessible, isUniSex, currentDate, editId, passMarkerId,hasChangingTable,passLatitude,passLongitude)
         }
         return binding.root
     }
@@ -179,19 +160,21 @@ class ContributeFragment : Fragment() {
         isUniSex: Boolean,
         currentDate: String,
         editId: Int,
-        passMarkerId: String?,
+        markerId: String,
         hasChangingTable: Boolean,
         passLatitude: Double,
         passLongitude: Double
-    ) {
+    ):Boolean {
 
         var counter = 100
         fun generateUniqueInt(): Int {
             return counter++
         }
-        val restroomItem = passMarkerId?.let {
+        val id = generateUniqueInt()
+
+        val restroomItem =
             RestroomItem(
-                it,
+                markerId,
                 isAccessible,
                 true,
                 "",
@@ -214,10 +197,9 @@ class ContributeFragment : Fragment() {
                 "",
                 0
             )
-        }
-        if (passMarkerId != null) {
-            restroomItem?.let { firebaseConnection.saveRestroomItem(it,passMarkerId) }
-        }
+
+            restroomItem?.let { firebaseConnection.saveRestroomItem(it,markerId) }
+        return true
     }
 
     private fun getPlaceByCoordinates(id: String, point: Point, onMapCoordinatesReceived: (List<RestroomMapbox>) -> Unit) {
@@ -260,7 +242,7 @@ class ContributeFragment : Fragment() {
 
                             mapToiletList.add(newToiletLocation)
 
-                            // Check if you have collected all the data and then call the callback
+                            // Check the all data and then call the callback
                             if (mapToiletList.size == suggestions.size) {
                                 onMapCoordinatesReceived(mapToiletList)
                             }
@@ -279,6 +261,32 @@ class ContributeFragment : Fragment() {
         }
     }
 
+    companion object {
+        fun newInstance(
+            longitude: Double? = null,
+            latitude: Double? = null,
+            markerId: String? = null
+        ): ContributeFragment {
+            val fragment = ContributeFragment()
+            val args = Bundle()
+            if (longitude != null) {
+                args.putDouble("longitude", longitude)
+            }
+            if (latitude != null) {
+                args.putDouble("latitude", latitude)
+            }
+            if (markerId != null) {
+                args.putString("markerId", markerId)
+            }
+            fragment.arguments = args
+            return fragment
+        }
+
+        // Create another newInstance method without any arguments
+        fun newInstance(): ContributeFragment {
+            return ContributeFragment()
+        }
+    }
 
     private fun parseResultName(input: PlaceAutocompleteAddress?): Map<String, String> {
         return input?.toString()
