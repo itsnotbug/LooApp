@@ -197,8 +197,6 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-
-
             dialog.dismiss()
         }
         alertDialogBuilder!!.setNegativeButton("Cancel") { dialog, _ ->
@@ -268,7 +266,7 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                         if (restroomMarkerId == feature.id()) {
                             Toast.makeText(
                                 context,
-                                "FID: ${feature.id()}, RID:$restroomMarkerId",
+                                "You clicked ${restroom.name}",
                                 Toast.LENGTH_SHORT
                             ).show()
                             val newMarkerId = restroom.markerId
@@ -353,9 +351,9 @@ class ExploreFragment : Fragment(), OnMapClickListener, OnMapLongClickListener {
                 if (!result.isEmpty) {
                     val document = result.documents[0]
                     val restroom = document.data
-                    Toast.makeText(context, "$restroom", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(context, "$restroom", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "No matching document found in api", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Checking on our records, please wait.", Toast.LENGTH_SHORT).show()
                 }
             }
             .addOnFailureListener { exception ->

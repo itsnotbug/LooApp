@@ -3,8 +3,11 @@ package com.example.looapp.Screens
 import android.os.Bundle
 import android.util.Log
 import android.widget.CheckedTextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import com.example.looapp.Fragments.ContributeFragment
+import com.example.looapp.Fragments.ExploreFragment
 import com.example.looapp.R
 import com.example.looapp.databinding.ActivityRestroomRatingsBinding
 import com.google.firebase.firestore.CollectionReference
@@ -90,9 +93,25 @@ class RestroomRatings : AppCompatActivity() {
             val comments = binding.txtTellUsMore.toString()
 
             // Update both checked data and ratings data in Firestore
-            updateDataAndRatingsToFirestore(markerId,longitude,latitude,oneRating,twoRating,overAllRating,checkedTextViewsToUpdate,comments)
+           val status= updateDataAndRatingsToFirestore(markerId,longitude,latitude,oneRating,twoRating,overAllRating,checkedTextViewsToUpdate,comments)
+            if(status){
+                Toast.makeText(applicationContext,"Successfully rated your loo experience",Toast.LENGTH_SHORT).show()
+                val exploreFragment = ExploreFragment()
+                val transaction = supportFragmentManager.beginTransaction()
+                transaction.replace(R.id.fragmentContainerView, exploreFragment)
+                transaction.disallowAddToBackStack()
+                transaction.commit()
+            }else{
+                Toast.makeText(applicationContext,"Failed to submit ratings",Toast.LENGTH_SHORT).show()
+            }
         }
-
+        binding.btnLater.setOnClickListener {
+            val exploreFragment = ExploreFragment()
+            val transaction = supportFragmentManager.beginTransaction()
+            transaction.replace(R.id.fragmentContainerView, exploreFragment)
+            transaction.disallowAddToBackStack()
+            transaction.commit()
+        }
         ratingBar.setOnRatingBarChangeListener { _, rating, _ ->
             // Update the emoji drawable based on the rating
             val emojiDrawableId = when (rating) {
@@ -132,7 +151,7 @@ class RestroomRatings : AppCompatActivity() {
         overAllRating: String,
         checkedTextViews: List<CheckedTextView>,
         comments:String
-    ) {
+    ):Boolean {
         val cleanliness = oneRating.toFloatOrNull()
         val maintenance = twoRating.toFloatOrNull()
         val overallExperience = overAllRating.toFloatOrNull()
@@ -177,6 +196,8 @@ class RestroomRatings : AppCompatActivity() {
             .addOnFailureListener { e ->
                 Log.e("SUCCESS_TAG", "Failed to Add Data! $e")
             }
+        return true
     }
+
 }
 

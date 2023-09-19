@@ -35,7 +35,7 @@
     <string name="text_city">City</string>
     <string name="text_country">Country</string>
     <string name="text_state">State (Optional)</string>
-    <string name="text_description">Description (Optional)</string>
+    <string name="text_description">Kindly provide directions on how can go here (Optional)</string>
     <string name="text_comments">Comments</string>
     <string name="text_accessible">Is the restroom accessible to all?</string>
     <string name="text_unisex">Is this toilet designed for use by any gender?</string>

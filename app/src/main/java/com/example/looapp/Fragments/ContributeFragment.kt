@@ -1,5 +1,6 @@
 package com.example.looapp.Fragments
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -27,8 +28,6 @@ class ContributeFragment : Fragment() {
     private lateinit var binding:FragmentContributeBinding
     private var firebaseConnection = FirebaseConnection()
     private lateinit var placeAutocomplete: PlaceAutocomplete
-    private lateinit var mapView: MapView
-    private lateinit var map: MapboxMap
     private var markerId =""
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -52,11 +51,25 @@ class ContributeFragment : Fragment() {
                     getPlaceByCoordinates(markerId, point) { restMapbox ->
                         for (restroom in restMapbox) {
                             if (restroom.id == passMarkerId) {
-                                binding.etStreet.setText(restroom.street)
-                                binding.etCity.setText(restroom.formattedAddress)
+                                if(restroom.neighborhood=="null"){
+                                    binding.etName.setText("None")
+                                    Toast.makeText(context,"${restroom.neighborhood}",Toast.LENGTH_SHORT).show()
+                                }else{
+                                    binding.etName.setText(restroom.neighborhood)
+                                }
+                                if(restroom.street=="null"){
+                                    binding.etStreet.setText("None")
+                                }else{
+                                    binding.etStreet.setText(restroom.street)
+                                }
+                                if(restroom.formattedAddress=="null"){
+                                    binding.etCity.setText("None")
+                                }else{
+                                    binding.etCity.setText(restroom.formattedAddress)
+                                }
                                 binding.etCountry.setText(restroom.country)
-                                Toast.makeText(context, "${restroom.street}", Toast.LENGTH_SHORT)
-                                    .show()
+//                                Toast.makeText(context, "${restroom.street}", Toast.LENGTH_SHORT)
+//                                    .show()
                                 break
                             }
                         }
@@ -140,14 +153,21 @@ class ContributeFragment : Fragment() {
                 )
                 if(result){
                     Toast.makeText(context,"Submitted successfully!",Toast.LENGTH_SHORT).show()
+                    val exploreFragment = ExploreFragment()
+                    val transaction = fragmentManager?.beginTransaction()
+                    transaction?.replace(R.id.fragmentContainerView,exploreFragment)
+                    transaction?.addToBackStack(null)
+                    transaction?.commit()
                 }else{
                     Toast.makeText(context,"Submission failed!",Toast.LENGTH_SHORT).show()
                 }
             }
+
         }
         return binding.root
     }
 
+    @SuppressLint("SuspiciousIndentation")
     private fun submitRequested(
         nameOfPlace: String,
         street: String,
@@ -171,7 +191,6 @@ class ContributeFragment : Fragment() {
             return counter++
         }
         val id = generateUniqueInt()
-
         val restroomItem =
             RestroomItem(
                 markerId,
